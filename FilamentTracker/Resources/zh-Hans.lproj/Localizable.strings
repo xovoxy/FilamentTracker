@@ -1,0 +1,70 @@
+/* Filament Tracker - 简体中文本地化 */
+
+/* General */
+"app.name" = "耗材追踪器";
+"cancel" = "取消";
+"save" = "保存";
+"edit" = "编辑";
+"delete" = "删除";
+"add" = "添加";
+"search" = "搜索";
+
+/* Garden View */
+"garden.title" = "整理您的打印材料";
+"garden.add.material" = "添加材料";
+"garden.empty.state" = "还没有耗材";
+"garden.empty.message" = "添加您的第一个耗材卷轴开始使用";
+
+/* Add Material */
+"material.add.title" = "添加材料";
+"material.edit.title" = "编辑材料";
+"material.name" = "材料名称";
+"material.weight" = "重量 (g)";
+"material.cost" = "成本";
+"material.type" = "材料类型";
+"material.color" = "颜色名称";
+"material.diameter" = "直径";
+"material.empty.spool" = "空卷轴重量 (g)";
+"material.remaining" = "剩余重量 (g)";
+"material.temp.min" = "最低温度 (°C)";
+"material.temp.max" = "最高温度 (°C)";
+"material.temp.bed" = "热床温度 (°C)";
+
+/* Analytics */
+"analytics.title" = "分析";
+"analytics.track.usage" = "使用跟踪";
+"analytics.summary" = "汇总分析材料类型：PLA、ABS、PETG 管理";
+
+/* Reminders */
+"reminders.title" = "提醒";
+"reminders.order.more" = "订购更多 %@";
+"reminders.drying.needed" = "需要干燥耗材";
+"reminders.check.bed" = "检查打印床";
+"reminders.manage.alerts" = "管理提醒";
+"reminders.today" = "今天";
+"reminders.tomorrow" = "明天";
+"reminders.days" = "%d 天";
+
+/* Detail View */
+"detail.log.usage" = "记录使用";
+"detail.archive" = "归档";
+"detail.remaining" = "剩余";
+"detail.days" = "天数";
+"detail.prints" = "打印";
+"detail.usage.over.time" = "使用趋势";
+"detail.history" = "历史记录";
+
+/* Track Usage */
+"usage.title" = "记录使用";
+"usage.method" = "输入方式";
+"usage.by.amount" = "按重量";
+"usage.by.length" = "按长度";
+"usage.by.weight" = "按总重";
+"usage.amount" = "使用量 (g)";
+"usage.length" = "使用长度 (m)";
+"usage.gross.weight" = "当前总重量 (g)";
+"usage.project.name" = "项目名称（可选）";
+"usage.type" = "类型";
+"usage.previous" = "之前剩余";
+"usage.deduct" = "扣除量";
+"usage.new.remaining" = "新的剩余";

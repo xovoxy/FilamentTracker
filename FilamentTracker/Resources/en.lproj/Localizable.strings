@@ -1,0 +1,70 @@
+/* Filament Tracker - English Localization */
+
+/* General */
+"app.name" = "Filament Tracker";
+"cancel" = "Cancel";
+"save" = "Save";
+"edit" = "Edit";
+"delete" = "Delete";
+"add" = "Add";
+"search" = "Search";
+
+/* Garden View */
+"garden.title" = "Organize Your Print Materials";
+"garden.add.material" = "Add Material";
+"garden.empty.state" = "No Filaments Yet";
+"garden.empty.message" = "Add your first filament spool to get started";
+
+/* Add Material */
+"material.add.title" = "Add Material";
+"material.edit.title" = "Edit Material";
+"material.name" = "Material Name";
+"material.weight" = "Weight (g)";
+"material.cost" = "Cost";
+"material.type" = "Material Type";
+"material.color" = "Color Name";
+"material.diameter" = "Diameter";
+"material.empty.spool" = "Empty Spool Weight (g)";
+"material.remaining" = "Remaining Weight (g)";
+"material.temp.min" = "Min Temp (°C)";
+"material.temp.max" = "Max Temp (°C)";
+"material.temp.bed" = "Bed Temp (°C)";
+
+/* Analytics */
+"analytics.title" = "Analytics";
+"analytics.track.usage" = "Track Usage";
+"analytics.summary" = "Summary analyzed material type: PLA, ABS, PETG management";
+
+/* Reminders */
+"reminders.title" = "Reminders";
+"reminders.order.more" = "Order More %@";
+"reminders.drying.needed" = "Filament Drying Needed";
+"reminders.check.bed" = "Check Print Bed";
+"reminders.manage.alerts" = "Manage Alerts";
+"reminders.today" = "Today";
+"reminders.tomorrow" = "Tomorrow";
+"reminders.days" = "%d days";
+
+/* Detail View */
+"detail.log.usage" = "Log Usage";
+"detail.archive" = "Archive";
+"detail.remaining" = "Remaining";
+"detail.days" = "Days";
+"detail.prints" = "Prints";
+"detail.usage.over.time" = "Usage Over Time";
+"detail.history" = "History";
+
+/* Track Usage */
+"usage.title" = "Log Usage";
+"usage.method" = "Input Method";
+"usage.by.amount" = "By Amount";
+"usage.by.length" = "By Length";
+"usage.by.weight" = "By Weight";
+"usage.amount" = "Amount Used (g)";
+"usage.length" = "Length Used (m)";
+"usage.gross.weight" = "Current Gross Weight (g)";
+"usage.project.name" = "Project Name (optional)";
+"usage.type" = "Type";
+"usage.previous" = "Previous Remaining";
+"usage.deduct" = "Amount to Deduct";
+"usage.new.remaining" = "New Remaining";
