@@ -12,17 +12,14 @@ struct AddMaterialView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    @State private var materialName: String = ""
     @State private var brand: String = ""
     @State private var material: String = "PLA"
-    @State private var colorName: String = ""
-    @State private var colorHex: String = "#CCCCCC"
+    @State private var colorHex: String = "#000000" // Default black
     @State private var diameter: Double = 1.75
-    @State private var initialWeight: String = ""
-    @State private var remainingWeight: String = ""
+    @State private var stockAmount: String = ""
     @State private var price: String = ""
-    @State private var minTemp: String = ""
-    @State private var maxTemp: String = ""
-    @State private var bedTemp: String = ""
+    @State private var notes: String = ""
     
     // AI Recognition States
     @State private var showImagePicker = false
@@ -31,34 +28,29 @@ struct AddMaterialView: View {
     @State private var sourceType: UIImagePickerController.SourceType = .camera
     @State private var showActionSheet = false
     @State private var showBrandPicker = false
+    @State private var showCustomMaterialInput = false
+    @State private var customMaterial: String = ""
     
     let filament: Filament?
-    let materials = ["PLA", "PETG", "ABS", "TPU", "Other"]
+    let materials = ["PLA", "PLA+", "ABS", "PETG", "TPU", "ASA", "PA", "PC", "PVA", "HIPS", "Wood", "Carbon", "Silk", "Matte"]
     
-    // Preset brands with logo asset names (use SF Symbols as fallback)
-    let presetBrands: [(name: String, logo: String, isAsset: Bool)] = [
-        ("Bambu Lab", "bambulab-logo", true),
-        ("Polymaker", "polymaker-logo", true),
-        ("Sunlu", "sunlu-logo", true),
-        ("eSUN", "esun-logo", true),
-        ("Creality", "creality-logo", true),
-        ("Prusa", "prusa-logo", true),
-        ("Hatchbox", "hatchbox-logo", true),
-        ("Overture", "overture-logo", true),
-        ("Other", "ellipsis.circle", false)
-    ]
+    // Preset brands
+    let presetBrands = ["Bambu Lab", "Polymaker", "Sunlu", "eSUN", "Creality", "Prusa", "Hatchbox", "Overture"]
     
-    let presetColors: [(String, String)] = [
-        ("Black", "#000000"),
-        ("White", "#FFFFFF"),
-        ("Red", "#FF0000"),
-        ("Blue", "#0000FF"),
-        ("Green", "#00FF00"),
-        ("Yellow", "#FFFF00"),
-        ("Orange", "#FFA500"),
-        ("Purple", "#800080"),
-        ("Pink", "#FFC0CB"),
-        ("Teal", "#008080")
+    // Design colors matching the mockup - common filament colors
+    let presetColors: [String] = [
+        "#000000", // Black
+        "#FFFFFF", // White
+        "#FF0000", // Red
+        "#0066FF", // Blue
+        "#00AA00", // Green
+        "#FFFF00", // Yellow
+        "#FFA500", // Orange
+        "#808080", // Gray
+        "#A8D5BA", // Sage green
+        "#C4A574", // Brown/tan
+        "#FFC0CB", // Pink
+        "#800080"  // Purple
     ]
     
     init(filament: Filament? = nil) {
@@ -67,8 +59,7 @@ struct AddMaterialView: View {
     
     // Form validation
     private var isFormValid: Bool {
-        !brand.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !initialWeight.trimmingCharacters(in: .whitespaces).isEmpty
+        !stockAmount.trimmingCharacters(in: .whitespaces).isEmpty
     }
     
     var body: some View {
@@ -77,8 +68,8 @@ struct AddMaterialView: View {
                 // Background gradient
                 LinearGradient(
                     gradient: Gradient(colors: [
-                        Color(hex: "#EBEBE0"), // Warm beige
-                        Color(hex: "#E0EBF0")  // Cool beige/blue
+                        Color(hex: "#EBEBE0"),
+                        Color(hex: "#E0EBF0")
                     ]),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
@@ -87,7 +78,8 @@ struct AddMaterialView: View {
                 
                 VStack(spacing: 0) {
                     ScrollView {
-                        VStack(spacing: 20) {
+                        VStack(alignment: .leading, spacing: 20) {
+                            
                             // AI Recognition Banner
                             Button(action: {
                                 showActionSheet = true
@@ -120,15 +112,13 @@ struct AddMaterialView: View {
                                 .padding()
                                 .background(
                                     LinearGradient(
-                                        gradient: Gradient(colors: [Color.teal, Color.blue]),
+                                        gradient: Gradient(colors: [Color(hex: "#6B9B7A"), Color(hex: "#5A8A6A")]),
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
-                                .cornerRadius(16)
-                                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                                .cornerRadius(12)
                             }
-                            .padding(.top, 8)
                             .confirmationDialog("Choose Image Source", isPresented: $showActionSheet) {
                                 Button("Camera") {
                                     sourceType = .camera
@@ -141,261 +131,243 @@ struct AddMaterialView: View {
                                 Button("Cancel", role: .cancel) {}
                             }
                             
-                            // Material Name Section
-                            SectionCard(title: "Basic Info") {
-                                VStack(spacing: 12) {
-                                    // Brand Picker Button
-                                    Button(action: { showBrandPicker = true }) {
-                                        HStack {
-                                            // Brand Logo
-                                            if let selectedBrand = presetBrands.first(where: { $0.name == brand }) {
-                                                if selectedBrand.isAsset, let _ = UIImage(named: selectedBrand.logo) {
-                                                    Image(selectedBrand.logo)
-                                                        .resizable()
-                                                        .scaledToFit()
-                                                        .frame(width: 24, height: 24)
-                                                        .clipShape(RoundedRectangle(cornerRadius: 4))
-                                                } else {
-                                                    // Show first letter
-                                                    Text(String(brand.prefix(1)))
-                                                        .font(.headline)
-                                                        .fontWeight(.bold)
-                                                        .foregroundColor(.teal)
-                                                        .frame(width: 24, height: 24)
+                            // Material Type Section
+                            FormSection(title: "Material Type") {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 8) {
+                                            ForEach(materials, id: \.self) { mat in
+                                                MaterialTypeChip(
+                                                    title: mat,
+                                                    isSelected: material == mat
+                                                ) {
+                                                    material = mat
+                                                    showCustomMaterialInput = false
+                                                    customMaterial = ""
                                                 }
-                                            } else if !brand.isEmpty {
-                                                // Custom brand - show first letter
-                                                Text(String(brand.prefix(1)))
-                                                    .font(.headline)
-                                                    .fontWeight(.bold)
-                                                    .foregroundColor(.teal)
-                                                    .frame(width: 24, height: 24)
-                                            } else {
-                                                Image(systemName: "building.2")
-                                                    .foregroundColor(.teal)
-                                                    .frame(width: 24, height: 24)
                                             }
                                             
-                                            Text(brand.isEmpty ? "Select Brand" : brand)
-                                                .foregroundColor(brand.isEmpty ? .secondary.opacity(0.7) : .primary)
-                                            
-                                            Spacer()
-                                            
-                                            Image(systemName: "chevron.right")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
+                                            // Custom/Other option - show as selected if material is custom
+                                            MaterialTypeChip(
+                                                title: !materials.contains(material) && !material.isEmpty ? material : "+",
+                                                isSelected: !materials.contains(material) && !material.isEmpty
+                                            ) {
+                                                showCustomMaterialInput = true
+                                            }
                                         }
-                                        .padding()
-                                        .background(Color(.secondarySystemBackground))
-                                        .cornerRadius(12)
-                                    }
-                                    .sheet(isPresented: $showBrandPicker) {
-                                        BrandPickerView(selectedBrand: $brand, presetBrands: presetBrands)
                                     }
                                     
-                                    // Material Type Picker
+                                    // Custom material input - only show when explicitly triggered
+                                    if showCustomMaterialInput {
+                                        HStack {
+                                            TextField("Enter custom type", text: $customMaterial)
+                                                .padding()
+                                                .background(Color(.secondarySystemBackground))
+                                                .cornerRadius(12)
+                                            
+                                            Button(action: {
+                                                if !customMaterial.isEmpty {
+                                                    material = customMaterial
+                                                    showCustomMaterialInput = false
+                                                }
+                                            }) {
+                                                Text("OK")
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 16)
+                                                    .padding(.vertical, 12)
+                                                    .background(customMaterial.isEmpty ? Color.gray : Color(hex: "#6B9B7A"))
+                                                    .cornerRadius(12)
+                                            }
+                                            .disabled(customMaterial.isEmpty)
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Material Name Section
+                            FormSection(title: "Material Name") {
+                                SimpleTextField(
+                                    placeholder: "Enter name",
+                                    text: $materialName
+                                )
+                            }
+                            
+                            // Brand Section
+                            FormSection(title: "Brand") {
+                                Button(action: { showBrandPicker = true }) {
                                     HStack {
-                                        Image(systemName: "cube.box")
-                                            .foregroundColor(.teal)
-                                            .frame(width: 24)
-                                        
-                                        Text("Material Type")
-                                            .foregroundColor(.secondary)
+                                        Text(brand.isEmpty ? "Select brand" : brand)
+                                            .foregroundColor(brand.isEmpty ? .secondary : .primary)
                                         
                                         Spacer()
                                         
-                                        Picker("Material", selection: $material) {
-                                            ForEach(materials, id: \.self) { mat in
-                                                Text(mat).tag(mat)
-                                            }
-                                        }
-                                        .pickerStyle(.menu)
-                                        .tint(.primary)
-                                    }
-                                    .padding()
-                                    .background(Color(.secondarySystemBackground))
-                                    .cornerRadius(12)
-                                    
-                                    CustomTextField(
-                                        icon: "paintpalette",
-                                        title: "Color Name",
-                                        text: $colorName
-                                    )
-                                    
-                                    // Color Picker
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text("Color Preset")
+                                        Image(systemName: "chevron.down")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
-                                            .padding(.leading, 4)
-                                        
-                                        ScrollView(.horizontal, showsIndicators: false) {
-                                            HStack(alignment: .top, spacing: 12) {
-                                                // Custom Color Picker
-                                                VStack(spacing: 4) {
-                                                    ColorPicker("", selection: Binding(
-                                                        get: { Color(hex: colorHex) },
-                                                        set: { newColor in
-                                                            if let hex = newColor.toHex() {
-                                                                colorHex = hex
-                                                            }
-                                                        }
-                                                    ), supportsOpacity: false)
-                                                    .labelsHidden()
-                                                    .frame(width: 44, height: 44)
-                                                    .background(Color.white)
-                                                    .clipShape(Circle())
-                                                    .overlay(
-                                                        Circle()
-                                                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                                                    )
-                                                    .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
-                                                    
-                                                    Text("Custom")
-                                                        .font(.caption2)
-                                                        .fontWeight(.medium)
-                                                        .foregroundColor(.primary)
-                                                }
-                                                
-                                                ForEach(presetColors, id: \.0) { color in
-                                                    ColorButton(
-                                                        name: color.0,
-                                                        hex: color.1,
-                                                        isSelected: colorHex == color.1
-                                                    ) {
-                                                        // Update both hex and name
-                                                        colorHex = color.1
-                                                        colorName = color.0
-                                                    }
-                                                }
-                                            }
-                                            .padding(.vertical, 4)
-                                            .padding(.horizontal, 4)
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Specifications Section
-                            SectionCard(title: "Specifications & Cost") {
-                                VStack(spacing: 12) {
-                                    // Diameter Picker
-                                    HStack {
-                                        Image(systemName: "circle.diameter")
-                                            .foregroundColor(.teal)
-                                            .frame(width: 24)
-                                        
-                                        Text("Diameter")
-                                            .foregroundColor(.secondary)
-                                        
-                                        Spacer()
-                                        
-                                        Picker("Diameter", selection: $diameter) {
-                                            Text("1.75 mm").tag(1.75)
-                                            Text("2.85 mm").tag(2.85)
-                                        }
-                                        .pickerStyle(.segmented)
-                                        .frame(width: 150)
                                     }
                                     .padding()
-                                    .background(Color(.secondarySystemBackground))
+                                    .background(Color(.systemBackground))
                                     .cornerRadius(12)
-                                    
-                                    CustomTextField(
-                                        icon: "scalemass",
-                                        title: "Initial Weight (g)",
-                                        text: $initialWeight,
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                    )
+                                }
+                                .sheet(isPresented: $showBrandPicker) {
+                                    BrandSelectionView(
+                                        selectedBrand: $brand,
+                                        presetBrands: presetBrands
+                                    )
+                                }
+                            }
+                            
+                            // Color Section
+                            FormSection(title: "Color") {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 12) {
+                                        // Custom Color Picker
+                                        VStack(spacing: 4) {
+                                            ColorPicker("", selection: Binding(
+                                                get: { Color(hex: colorHex) },
+                                                set: { newColor in
+                                                    if let hex = newColor.toHex() {
+                                                        colorHex = hex
+                                                    }
+                                                }
+                                            ), supportsOpacity: false)
+                                            .labelsHidden()
+                                            .frame(width: 40, height: 40)
+                                            .background(Color.white)
+                                            .clipShape(Circle())
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                            )
+                                        }
+                                        
+                                        // Preset Colors
+                                        ForEach(presetColors, id: \.self) { color in
+                                            SimpleColorButton(
+                                                hex: color,
+                                                isSelected: colorHex == color
+                                            ) {
+                                                colorHex = color
+                                            }
+                                        }
+                                    }
+                                    .padding(.vertical, 4)
+                                }
+                            }
+                            
+                            // Diameter Section
+                            FormSection(title: "Diameter") {
+                                DiameterPicker(selectedDiameter: $diameter)
+                            }
+                            
+                            // Stock Amount & Price Section
+                            HStack(spacing: 12) {
+                                FormSection(title: "Stock Amount") {
+                                    SuffixTextField(
+                                        placeholder: "",
+                                        text: $stockAmount,
+                                        suffix: "kg",
                                         keyboardType: .decimalPad
                                     )
-                                    
-                                    CustomTextField(
-                                        icon: "arrow.down.circle",
-                                        title: "Remaining Weight (g)",
-                                        text: $remainingWeight,
-                                        keyboardType: .decimalPad
-                                    )
-                                    
-                                    CustomTextField(
-                                        icon: "tag",
-                                        title: "Cost",
+                                }
+                                
+                                FormSection(title: "Price") {
+                                    SuffixTextField(
+                                        placeholder: "",
                                         text: $price,
+                                        suffix: "¥",
                                         keyboardType: .decimalPad
                                     )
                                 }
                             }
                             
-                            // Temperature Section
-                            SectionCard(title: "Temperatures (°C)") {
-                                HStack(spacing: 12) {
-                                    CustomTextField(
-                                        icon: "thermometer.snowflake",
-                                        title: "Min",
-                                        text: $minTemp,
-                                        keyboardType: .numberPad
-                                    )
-                                    
-                                    CustomTextField(
-                                        icon: "thermometer.sun",
-                                        title: "Max",
-                                        text: $maxTemp,
-                                        keyboardType: .numberPad
-                                    )
-                                    
-                                    CustomTextField(
-                                        icon: "bed.double",
-                                        title: "Bed",
-                                        text: $bedTemp,
-                                        keyboardType: .numberPad
-                                    )
-                                }
+                            // Notes Section
+                            FormSection(title: "Notes", subtitle: "(optional)") {
+                                NotesTextField(
+                                    placeholder: "",
+                                    text: $notes
+                                )
                             }
+                            
+                            // Spool Image
+                            HStack {
+                                Spacer()
+                                Image("add.spool")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 160, height: 120)
+                                    .foregroundColor(Color(hex: colorHex).opacity(0.6))
+                                Spacer()
+                            }
+                            .padding(.top, 10)
                         }
-                        .padding()
-                        .padding(.bottom, 80) // Space for bottom buttons
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+                        .padding(.bottom, 120)
                     }
                     
                     // Bottom Buttons
-                    HStack(spacing: 16) {
-                        // Cancel Button
-                        Button(action: { dismiss() }) {
-                            Text("Cancel")
-                                .font(.headline)
-                                .foregroundColor(.primary)
+                    VStack(spacing: 12) {
+                        // Clear Form Button
+                        Button(action: { clearForm() }) {
+                            Text("Clear Form")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.secondary)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color(.systemGray5))
-                                .cornerRadius(16)
+                                .padding(.vertical, 14)
+                                .background(Color(.systemBackground))
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                )
                         }
                         
-                        // Save Button
+                        // Add Material Button
                         Button(action: { saveFilament() }) {
-                            Text("Save Material")
+                            Text("Add Material")
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(isFormValid ? Color(hex: "#2EAA7F") : Color.gray.opacity(0.5))
-                                .cornerRadius(16)
-                                .shadow(color: isFormValid ? Color(hex: "#2EAA7F").opacity(0.3) : Color.clear, radius: 8, x: 0, y: 4)
+                                .background(isFormValid ? Color(hex: "#6B9B7A") : Color.gray.opacity(0.4))
+                                .cornerRadius(12)
                         }
                         .disabled(!isFormValid)
                     }
-                    .padding()
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
                     .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [
-                                Color(hex: "#EBEBE0").opacity(0.95),
-                                Color(hex: "#E0EBF0").opacity(0.95)
-                            ]),
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .ignoresSafeArea(edges: .bottom)
+                        Color(.systemBackground)
+                            .opacity(0.95)
+                            .ignoresSafeArea(edges: .bottom)
                     )
                 }
             }
-            .navigationTitle(filament == nil ? "Add Material" : "Edit Material")
+            .navigationTitle("Add New Material")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "arrow.left")
+                            .foregroundColor(.primary)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Clear") {
+                        clearForm()
+                    }
+                    .foregroundColor(.secondary)
+                }
+            }
             .sheet(isPresented: $showImagePicker) {
                 ImagePicker(image: $inputImage, sourceType: sourceType)
                     .ignoresSafeArea()
@@ -413,6 +385,17 @@ struct AddMaterialView: View {
         }
     }
     
+    private func clearForm() {
+        materialName = ""
+        brand = ""
+        material = "PLA"
+        colorHex = "#A8D5BA"
+        diameter = 1.75
+        stockAmount = ""
+        price = ""
+        notes = ""
+    }
+    
     private func analyzeImage(_ image: UIImage) {
         isAnalyzing = true
         
@@ -424,16 +407,15 @@ struct AddMaterialView: View {
                     withAnimation {
                         if let brand = recognizedData.brand { self.brand = brand }
                         if let material = recognizedData.material { self.material = material }
-                        if let colorName = recognizedData.colorName { self.colorName = colorName }
+                        if let colorName = recognizedData.colorName { self.materialName = colorName }
                         if let colorHex = recognizedData.colorHex { self.colorHex = colorHex }
                         if let weight = recognizedData.weight {
-                            self.initialWeight = weight
-                            self.remainingWeight = weight
+                            // Convert g to kg
+                            if let grams = Double(weight) {
+                                self.stockAmount = String(format: "%.1f", grams / 1000.0)
+                            }
                         }
                         if let diameter = recognizedData.diameter { self.diameter = diameter }
-                        if let minTemp = recognizedData.minTemp { self.minTemp = minTemp }
-                        if let maxTemp = recognizedData.maxTemp { self.maxTemp = maxTemp }
-                        if let bedTemp = recognizedData.bedTemp { self.bedTemp = bedTemp }
                         
                         isAnalyzing = false
                     }
@@ -441,57 +423,50 @@ struct AddMaterialView: View {
             } catch {
                 await MainActor.run {
                     isAnalyzing = false
-                    // TODO: Handle error state
                 }
             }
         }
     }
     
     private func loadFilament(_ filament: Filament) {
+        materialName = filament.colorName
         brand = filament.brand
         material = filament.material
-        colorName = filament.colorName
         colorHex = filament.colorHex
         diameter = filament.diameter
-        initialWeight = String(filament.initialWeight)
-        remainingWeight = String(filament.remainingWeight)
+        stockAmount = String(format: "%.1f", filament.initialWeight / 1000.0)
         price = filament.price.map { String(describing: $0) } ?? ""
-        minTemp = filament.minTemp.map { String($0) } ?? ""
-        maxTemp = filament.maxTemp.map { String($0) } ?? ""
-        bedTemp = filament.bedTemp.map { String($0) } ?? ""
+        notes = ""
     }
     
     private func saveFilament() {
-        let initial = Double(initialWeight) ?? 1000.0
-        let remaining = Double(remainingWeight) ?? initial
+        let stockKg = Double(stockAmount) ?? 1.0
+        let stockGrams = stockKg * 1000.0
         
         if let existing = filament {
             existing.brand = brand
             existing.material = material
-            existing.colorName = colorName
+            existing.colorName = materialName
             existing.colorHex = colorHex
             existing.diameter = diameter
-            existing.initialWeight = initial
-            existing.remainingWeight = remaining
+            existing.initialWeight = stockGrams
+            existing.remainingWeight = stockGrams
             existing.emptySpoolWeight = nil
             existing.price = Decimal(string: price)
-            existing.minTemp = Int(minTemp)
-            existing.maxTemp = Int(maxTemp)
-            existing.bedTemp = Int(bedTemp)
         } else {
             let newFilament = Filament(
                 brand: brand,
                 material: material,
-                colorName: colorName,
+                colorName: materialName,
                 colorHex: colorHex,
                 diameter: diameter,
-                initialWeight: initial,
-                remainingWeight: remaining,
+                initialWeight: stockGrams,
+                remainingWeight: stockGrams,
                 emptySpoolWeight: nil,
                 density: nil,
-                minTemp: Int(minTemp),
-                maxTemp: Int(maxTemp),
-                bedTemp: Int(bedTemp),
+                minTemp: nil,
+                maxTemp: nil,
+                bedTemp: nil,
                 price: Decimal(string: price)
             )
             modelContext.insert(newFilament)
@@ -501,8 +476,183 @@ struct AddMaterialView: View {
     }
 }
 
-// MARK: - Helper Components
+// MARK: - Form Section
+struct FormSection<Content: View>: View {
+    let title: String
+    var subtitle: String? = nil
+    let content: Content
+    
+    init(title: String, subtitle: String? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.subtitle = subtitle
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            content
+        }
+    }
+}
 
+// MARK: - Material Type Chip
+struct MaterialTypeChip: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(isSelected ? .white : .primary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(isSelected ? Color(hex: "#8B9A7D") : Color(.systemBackground))
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(isSelected ? Color.clear : Color.gray.opacity(0.3), lineWidth: 1)
+                )
+        }
+    }
+}
+
+// MARK: - Simple TextField
+struct SimpleTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+    }
+}
+
+// MARK: - Simple Color Button
+struct SimpleColorButton: View {
+    let hex: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: hex))
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Circle()
+                            .stroke(isSelected ? Color(hex: "#6B9B7A") : Color.gray.opacity(0.2), lineWidth: isSelected ? 2 : 1)
+                    )
+                
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Diameter Picker
+struct DiameterPicker: View {
+    @Binding var selectedDiameter: Double
+    
+    var body: some View {
+        Menu {
+            Button("1.75mm") { selectedDiameter = 1.75 }
+            Button("2.85mm") { selectedDiameter = 2.85 }
+        } label: {
+            HStack {
+                Text(selectedDiameter == 1.75 ? "1.75mm" : "2.85mm")
+                    .foregroundColor(.primary)
+                
+                Text(selectedDiameter == 1.75 ? "2.85mm" : "1.75mm")
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.down")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+        }
+    }
+}
+
+// MARK: - Suffix TextField
+struct SuffixTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    let suffix: String
+    var keyboardType: UIKeyboardType = .default
+    
+    var body: some View {
+        HStack {
+            TextField(placeholder, text: $text)
+                .keyboardType(keyboardType)
+            
+            Text(suffix)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
+// MARK: - Notes TextField
+struct NotesTextField: View {
+    let placeholder: String
+    @Binding var text: String
+    
+    var body: some View {
+        TextEditor(text: $text)
+            .frame(minHeight: 80)
+            .padding(8)
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+    }
+}
+
+// MARK: - Legacy Components (kept for compatibility)
 struct SectionCard<Content: View>: View {
     let title: String
     let content: Content
@@ -584,13 +734,13 @@ struct ColorButton: View {
     }
 }
 
-// MARK: - Brand Picker View
-struct BrandPickerView: View {
+// MARK: - Brand Selection View
+struct BrandSelectionView: View {
     @Binding var selectedBrand: String
-    let presetBrands: [(name: String, logo: String, isAsset: Bool)]
+    let presetBrands: [String]
     @Environment(\.dismiss) private var dismiss
     @State private var customBrand: String = ""
-    @State private var showCustomInput: Bool = false
+    @State private var isCustomMode: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -609,47 +759,33 @@ struct BrandPickerView: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         // Preset Brands
-                        ForEach(presetBrands, id: \.name) { brand in
+                        ForEach(presetBrands, id: \.self) { brand in
                             Button(action: {
-                                if brand.name == "Other" {
-                                    showCustomInput = true
-                                } else {
-                                    selectedBrand = brand.name
-                                    dismiss()
-                                }
+                                selectedBrand = brand
+                                dismiss()
                             }) {
-                                HStack(spacing: 16) {
-                                    // Brand Logo
+                                HStack {
+                                    // Brand initial letter
                                     ZStack {
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color.white)
-                                            .frame(width: 48, height: 48)
-                                            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                                        Circle()
+                                            .fill(Color(hex: "#6B9B7A").opacity(0.2))
+                                            .frame(width: 40, height: 40)
                                         
-                                        if brand.isAsset, let _ = UIImage(named: brand.logo) {
-                                            Image(brand.logo)
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 36, height: 36)
-                                        } else {
-                                            // Fallback: Show first letter of brand name
-                                            Text(String(brand.name.prefix(1)))
-                                                .font(.title)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.teal)
-                                        }
+                                        Text(String(brand.prefix(1)))
+                                            .font(.headline)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(Color(hex: "#6B9B7A"))
                                     }
                                     
-                                    Text(brand.name)
-                                        .font(.headline)
+                                    Text(brand)
+                                        .font(.body)
                                         .foregroundColor(.primary)
                                     
                                     Spacer()
                                     
-                                    if selectedBrand == brand.name {
+                                    if selectedBrand == brand {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .foregroundColor(.teal)
-                                            .font(.title3)
+                                            .foregroundColor(Color(hex: "#6B9B7A"))
                                     }
                                 }
                                 .padding()
@@ -658,13 +794,38 @@ struct BrandPickerView: View {
                             }
                         }
                         
-                        // Custom Brand Input
-                        if showCustomInput {
+                        // Custom Brand Option
+                        Button(action: {
+                            isCustomMode = true
+                        }) {
+                            HStack {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.gray.opacity(0.2))
+                                        .frame(width: 40, height: 40)
+                                    
+                                    Image(systemName: "plus")
+                                        .font(.headline)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                Text("Custom brand...")
+                                    .font(.body)
+                                    .foregroundColor(.secondary)
+                                
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color(.systemBackground))
+                            .cornerRadius(12)
+                        }
+                        
+                        // Custom Input Field
+                        if isCustomMode {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Enter Custom Brand")
+                                Text("Enter custom brand")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                    .padding(.leading, 4)
                                 
                                 HStack {
                                     TextField("Brand name", text: $customBrand)
@@ -683,7 +844,7 @@ struct BrandPickerView: View {
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 20)
                                             .padding(.vertical, 14)
-                                            .background(customBrand.isEmpty ? Color.gray : Color(hex: "#2EAA7F"))
+                                            .background(customBrand.isEmpty ? Color.gray : Color(hex: "#6B9B7A"))
                                             .cornerRadius(12)
                                     }
                                     .disabled(customBrand.isEmpty)
