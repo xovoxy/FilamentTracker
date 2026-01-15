@@ -26,6 +26,7 @@ final class Filament {
     var price: Decimal?
     var purchaseDate: Date
     var isArchived: Bool
+    var notes: String?
     
     @Relationship(deleteRule: .cascade, inverse: \UsageLog.filament)
     var logs: [UsageLog] = []
@@ -46,7 +47,8 @@ final class Filament {
         bedTemp: Int? = nil,
         price: Decimal? = nil,
         purchaseDate: Date = Date(),
-        isArchived: Bool = false
+        isArchived: Bool = false,
+        notes: String? = nil
     ) {
         self.id = id
         self.brand = brand
@@ -64,6 +66,7 @@ final class Filament {
         self.price = price
         self.purchaseDate = purchaseDate
         self.isArchived = isArchived
+        self.notes = notes
     }
     
     var remainingPercentage: Double {

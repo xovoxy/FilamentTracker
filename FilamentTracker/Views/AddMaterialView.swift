@@ -139,26 +139,32 @@ struct AddMaterialView: View {
                                             ForEach(materials, id: \.self) { mat in
                                                 MaterialTypeChip(
                                                     title: mat,
-                                                    isSelected: material == mat
+                                                    isSelected: material == mat,
+                                                    disabled: filament != nil
                                                 ) {
-                                                    material = mat
-                                                    showCustomMaterialInput = false
-                                                    customMaterial = ""
+                                                    if filament == nil {
+                                                        material = mat
+                                                        showCustomMaterialInput = false
+                                                        customMaterial = ""
+                                                    }
                                                 }
                                             }
                                             
                                             // Custom/Other option - show as selected if material is custom
                                             MaterialTypeChip(
                                                 title: !materials.contains(material) && !material.isEmpty ? material : "+",
-                                                isSelected: !materials.contains(material) && !material.isEmpty
+                                                isSelected: !materials.contains(material) && !material.isEmpty,
+                                                disabled: filament != nil
                                             ) {
-                                                showCustomMaterialInput = true
+                                                if filament == nil {
+                                                    showCustomMaterialInput = true
+                                                }
                                             }
                                         }
                                     }
                                     
                                     // Custom material input - only show when explicitly triggered
-                                    if showCustomMaterialInput {
+                                    if showCustomMaterialInput && filament == nil {
                                         HStack {
                                             TextField("Enter custom type", text: $customMaterial)
                                                 .padding()
@@ -232,7 +238,7 @@ struct AddMaterialView: View {
                                             ColorPicker("", selection: Binding(
                                                 get: { Color(hex: colorHex) },
                                                 set: { newColor in
-                                                    if let hex = newColor.toHex() {
+                                                    if filament == nil, let hex = newColor.toHex() {
                                                         colorHex = hex
                                                     }
                                                 }
@@ -245,15 +251,19 @@ struct AddMaterialView: View {
                                                 Circle()
                                                     .stroke(Color.gray.opacity(0.3), lineWidth: 1)
                                             )
+                                            .disabled(filament != nil)
                                         }
                                         
                                         // Preset Colors
                                         ForEach(presetColors, id: \.self) { color in
                                             SimpleColorButton(
                                                 hex: color,
-                                                isSelected: colorHex == color
+                                                isSelected: colorHex == color,
+                                                disabled: filament != nil
                                             ) {
-                                                colorHex = color
+                                                if filament == nil {
+                                                    colorHex = color
+                                                }
                                             }
                                         }
                                     }
@@ -314,25 +324,27 @@ struct AddMaterialView: View {
                     
                     // Bottom Buttons
                     VStack(spacing: 12) {
-                        // Clear Form Button
-                        Button(action: { clearForm() }) {
-                            Text("Clear Form")
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color(.systemBackground))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
+                        // Clear Form Button - only show when adding new material
+                        if filament == nil {
+                            Button(action: { clearForm() }) {
+                                Text("Clear Form")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(Color(.systemBackground))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                            }
                         }
                         
-                        // Add Material Button
+                        // Add/Update Material Button
                         Button(action: { saveFilament() }) {
-                            Text("Add Material")
+                            Text(filament == nil ? "Add Material" : "Update Material")
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -351,7 +363,7 @@ struct AddMaterialView: View {
                     )
                 }
             }
-            .navigationTitle("Add New Material")
+            .navigationTitle(filament == nil ? "Add New Material" : "Edit Material")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -362,10 +374,12 @@ struct AddMaterialView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Clear") {
-                        clearForm()
+                    if filament == nil {
+                        Button("Clear") {
+                            clearForm()
+                        }
+                        .foregroundColor(.secondary)
                     }
-                    .foregroundColor(.secondary)
                 }
             }
             .sheet(isPresented: $showImagePicker) {
@@ -436,7 +450,7 @@ struct AddMaterialView: View {
         diameter = filament.diameter
         stockAmount = String(format: "%.1f", filament.initialWeight / 1000.0)
         price = filament.price.map { String(describing: $0) } ?? ""
-        notes = ""
+        notes = filament.notes ?? ""
     }
     
     private func saveFilament() {
@@ -444,15 +458,17 @@ struct AddMaterialView: View {
         let stockGrams = stockKg * 1000.0
         
         if let existing = filament {
+            // In edit mode, don't update material, colorName, or colorHex
             existing.brand = brand
-            existing.material = material
-            existing.colorName = materialName
-            existing.colorHex = colorHex
+            // existing.material = material  // Not allowed to change
+            // existing.colorName = materialName  // Not allowed to change
+            // existing.colorHex = colorHex  // Not allowed to change
             existing.diameter = diameter
             existing.initialWeight = stockGrams
             existing.remainingWeight = stockGrams
             existing.emptySpoolWeight = nil
             existing.price = Decimal(string: price)
+            existing.notes = notes.isEmpty ? nil : notes
         } else {
             let newFilament = Filament(
                 brand: brand,
@@ -467,7 +483,8 @@ struct AddMaterialView: View {
                 minTemp: nil,
                 maxTemp: nil,
                 bedTemp: nil,
-                price: Decimal(string: price)
+                price: Decimal(string: price),
+                notes: notes.isEmpty ? nil : notes
             )
             modelContext.insert(newFilament)
         }
@@ -513,22 +530,24 @@ struct MaterialTypeChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
+    var disabled: Bool = false
     
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(.subheadline)
                 .fontWeight(.medium)
-                .foregroundColor(isSelected ? .white : .primary)
+                .foregroundColor(isSelected ? .white : (disabled ? .secondary : .primary))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .background(isSelected ? Color(hex: "#8B9A7D") : Color(.systemBackground))
+                .background(isSelected ? Color(hex: "#8B9A7D") : (disabled ? Color(.systemGray5) : Color(.systemBackground)))
                 .cornerRadius(20)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(isSelected ? Color.clear : Color.gray.opacity(0.3), lineWidth: 1)
+                        .stroke(isSelected ? Color.clear : Color.gray.opacity(disabled ? 0.2 : 0.3), lineWidth: 1)
                 )
         }
+        .disabled(disabled)
     }
 }
 
@@ -554,6 +573,7 @@ struct SimpleColorButton: View {
     let hex: String
     let isSelected: Bool
     let action: () -> Void
+    var disabled: Bool = false
     
     var body: some View {
         Button(action: action) {
@@ -561,6 +581,7 @@ struct SimpleColorButton: View {
                 Circle()
                     .fill(Color(hex: hex))
                     .frame(width: 40, height: 40)
+                    .opacity(disabled ? 0.5 : 1.0)
                     .overlay(
                         Circle()
                             .stroke(isSelected ? Color(hex: "#6B9B7A") : Color.gray.opacity(0.2), lineWidth: isSelected ? 2 : 1)
@@ -573,6 +594,7 @@ struct SimpleColorButton: View {
                 }
             }
         }
+        .disabled(disabled)
     }
 }
 
