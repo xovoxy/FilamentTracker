@@ -342,27 +342,8 @@ struct AddMaterialView: View {
                         .padding(.bottom, 120)
                     }
                     
-                    // Bottom Buttons
+                    // Bottom Button
                     VStack(spacing: 12) {
-                        // Clear Form Button - only show when adding new material
-                        if filament == nil {
-                            Button(action: { clearForm() }) {
-                                Text("Clear Form")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
-                                    .background(Color(.systemBackground))
-                                    .cornerRadius(12)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                    )
-                            }
-                        }
-                        
-                        // Add/Update Material Button
                         Button(action: { saveFilament() }) {
                             Text(filament == nil ? "Add Material" : "Update Material")
                                 .font(.headline)
