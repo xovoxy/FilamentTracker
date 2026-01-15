@@ -639,7 +639,7 @@ struct ColorMaterialStatsSheet: View {
                             
                             GroupStatsCard(
                                 title: "Remaining",
-                                value: String(format: "%.1f kg", group.totalRemaining / (1000.0 * group.totalCount)),
+                                value: String(format: "%.1f kg", group.totalRemaining / 1000.0 ),
                                 icon: "scalemass",
                                 color: Color(hex: "#C8BFE7")
                             )

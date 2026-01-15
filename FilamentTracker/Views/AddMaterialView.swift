@@ -12,7 +12,7 @@ struct AddMaterialView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
-    @State private var materialName: String = ""
+    @State private var colorName: String = ""
     @State private var brand: String = ""
     @State private var material: String = "PLA"
     @State private var colorHex: String = "#000000" // Default black
@@ -51,6 +51,22 @@ struct AddMaterialView: View {
         "#C4A574", // Brown/tan
         "#FFC0CB", // Pink
         "#800080"  // Purple
+    ]
+    
+    // Color name mapping for preset colors
+    let colorNameMap: [String: String] = [
+        "#000000": "Black",
+        "#FFFFFF": "White",
+        "#FF0000": "Red",
+        "#0066FF": "Blue",
+        "#00AA00": "Green",
+        "#FFFF00": "Yellow",
+        "#FFA500": "Orange",
+        "#808080": "Gray",
+        "#A8D5BA": "Sage Green",
+        "#C4A574": "Brown",
+        "#FFC0CB": "Pink",
+        "#800080": "Purple"
     ]
     
     init(filament: Filament? = nil) {
@@ -192,11 +208,11 @@ struct AddMaterialView: View {
                                 }
                             }
                             
-                            // Material Name Section
-                            FormSection(title: "Material Name") {
+                            // Color Name Section
+                            FormSection(title: "Color Name") {
                                 SimpleTextField(
                                     placeholder: "Enter name",
-                                    text: $materialName
+                                    text: $colorName
                                 )
                             }
                             
@@ -263,6 +279,10 @@ struct AddMaterialView: View {
                                             ) {
                                                 if filament == nil {
                                                     colorHex = color
+                                                    // Auto-fill color name if empty
+                                                    if colorName.isEmpty, let name = colorNameMap[color] {
+                                                        colorName = name
+                                                    }
                                                 }
                                             }
                                         }
@@ -400,7 +420,7 @@ struct AddMaterialView: View {
     }
     
     private func clearForm() {
-        materialName = ""
+        colorName = ""
         brand = ""
         material = "PLA"
         colorHex = "#A8D5BA"
@@ -421,7 +441,7 @@ struct AddMaterialView: View {
                     withAnimation {
                         if let brand = recognizedData.brand { self.brand = brand }
                         if let material = recognizedData.material { self.material = material }
-                        if let colorName = recognizedData.colorName { self.materialName = colorName }
+                        if let colorName = recognizedData.colorName { self.colorName = colorName }
                         if let colorHex = recognizedData.colorHex { self.colorHex = colorHex }
                         if let weight = recognizedData.weight {
                             // Convert g to kg
@@ -443,7 +463,7 @@ struct AddMaterialView: View {
     }
     
     private func loadFilament(_ filament: Filament) {
-        materialName = filament.colorName
+        colorName = filament.colorName
         brand = filament.brand
         material = filament.material
         colorHex = filament.colorHex
@@ -461,7 +481,7 @@ struct AddMaterialView: View {
             // In edit mode, don't update material, colorName, or colorHex
             existing.brand = brand
             // existing.material = material  // Not allowed to change
-            // existing.colorName = materialName  // Not allowed to change
+            // existing.colorName = colorName  // Not allowed to change
             // existing.colorHex = colorHex  // Not allowed to change
             existing.diameter = diameter
             existing.initialWeight = stockGrams
@@ -473,7 +493,7 @@ struct AddMaterialView: View {
             let newFilament = Filament(
                 brand: brand,
                 material: material,
-                colorName: materialName,
+                colorName: colorName,
                 colorHex: colorHex,
                 diameter: diameter,
                 initialWeight: stockGrams,
