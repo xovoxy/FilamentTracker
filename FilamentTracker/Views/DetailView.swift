@@ -65,6 +65,97 @@ struct DetailView: View {
                 }
                 .padding()
                 
+                // Detailed Information Section
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Details")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 12) {
+                        // Remaining Weight
+                        DetailInfoRow(
+                            icon: "scalemass",
+                            title: "Remaining Weight",
+                            value: String(format: "%.1f g", filament.remainingWeight)
+                        )
+                        
+                        // Initial Weight
+                        DetailInfoRow(
+                            icon: "cube.box",
+                            title: "Initial Weight",
+                            value: String(format: "%.1f g", filament.initialWeight)
+                        )
+                        
+                        // Price
+                        if let price = filament.price {
+                            DetailInfoRow(
+                                icon: "dollarsign.circle",
+                                title: "Price",
+                                value: formatPrice(price)
+                            )
+                        }
+                        
+                        // Notes
+                        if let notes = filament.notes, !notes.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "note.text")
+                                        .foregroundColor(.teal)
+                                        .frame(width: 20)
+                                    Text("Notes")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+                                
+                                Text(notes)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.leading, 28)
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        
+                        // Additional Info
+                        VStack(alignment: .leading, spacing: 8) {
+                            if let diameter = Optional(filament.diameter), diameter > 0 {
+                                DetailInfoRow(
+                                    icon: "circle.dotted",
+                                    title: "Diameter",
+                                    value: String(format: "%.2f mm", diameter)
+                                )
+                            }
+                            
+                            if let emptySpoolWeight = filament.emptySpoolWeight {
+                                DetailInfoRow(
+                                    icon: "scalemass.fill",
+                                    title: "Empty Spool Weight",
+                                    value: String(format: "%.1f g", emptySpoolWeight)
+                                )
+                            }
+                            
+                            if let density = filament.density {
+                                DetailInfoRow(
+                                    icon: "drop.fill",
+                                    title: "Density",
+                                    value: String(format: "%.2f g/cm³", density)
+                                )
+                            }
+                            
+                            DetailInfoRow(
+                                icon: "calendar",
+                                title: "Purchase Date",
+                                value: filament.purchaseDate.formatted(date: .abbreviated, time: .omitted)
+                            )
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                    .padding(.horizontal)
+                }
+                .padding(.vertical)
+                
                 // Usage chart
                 if !filament.logs.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
@@ -99,6 +190,13 @@ struct DetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+            }
+            
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button {
@@ -134,6 +232,14 @@ struct DetailView: View {
     private func archiveFilament() {
         filament.isArchived = true
         dismiss()
+    }
+    
+    private func formatPrice(_ price: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 0
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: price as NSDecimalNumber) ?? "\(price)"
     }
 }
 
@@ -229,6 +335,31 @@ struct HistoryRow: View {
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
+    }
+}
+
+struct DetailInfoRow: View {
+    let icon: String
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(.teal)
+                .frame(width: 20)
+            
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+        .padding(.vertical, 4)
     }
 }
 

@@ -295,7 +295,7 @@ struct HomeView: View {
                 EmptyInventoryView()
             } else {
                 List {
-                    ForEach(groupedFilaments.prefix(5)) { group in
+                    ForEach(groupedFilaments) { group in
                         GroupedInventoryRow(
                             group: group,
                             onTap: { selectedGroup = group },
@@ -311,8 +311,7 @@ struct HomeView: View {
                     }
                 }
                 .listStyle(.plain)
-                .scrollDisabled(true)
-                .frame(height: CGFloat(min(groupedFilaments.count, 5)) * 90)
+                .frame(minHeight: CGFloat(min(groupedFilaments.count, 3)) * 90)
             }
         }
     }
@@ -798,6 +797,7 @@ struct GroupUsageChart: View {
 // MARK: - Group Filament List
 struct GroupFilamentList: View {
     let filaments: [Filament]
+    @State private var selectedFilament: Filament?
     
     var body: some View {
         VStack(spacing: 8) {
@@ -842,12 +842,25 @@ struct GroupFilamentList: View {
                             .font(.system(size: 8, weight: .medium))
                             .foregroundColor(.primary)
                     }
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 .padding(.vertical, 8)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectedFilament = filament
+                }
                 
                 if filament.id != filaments.last?.id {
                     Divider()
                 }
+            }
+        }
+        .sheet(item: $selectedFilament) { filament in
+            NavigationStack {
+                DetailView(filament: filament)
             }
         }
     }
