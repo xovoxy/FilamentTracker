@@ -16,6 +16,7 @@ struct DetailView: View {
     let filament: Filament
     @State private var showEditSheet = false
     @State private var showLogUsageSheet = false
+    @State private var showArchiveAlert = false
     
     // Calculate total used weight in grams
     private var totalUsedWeight: Double {
@@ -65,9 +66,26 @@ struct DetailView: View {
         .navigationTitle("Material Detail")
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { showEditSheet = true }) {
-                    Text("Edit")
-                        .foregroundColor(.blue)
+                Menu {
+                    Button {
+                        showEditSheet = true
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    
+                    Button {
+                        showLogUsageSheet = true
+                    } label: {
+                        Label("Log Usage", systemImage: "plus.circle")
+                    }
+                    
+                    Button(role: .destructive) {
+                        showArchiveAlert = true
+                    } label: {
+                        Label("Archive", systemImage: "archivebox")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
                 }
             }
         }
@@ -79,6 +97,20 @@ struct DetailView: View {
         .sheet(isPresented: $showLogUsageSheet) {
             TrackUsageView(filament: filament)
         }
+        .alert("Archive Filament", isPresented: $showArchiveAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Archive", role: .destructive) {
+                archiveFilament()
+            }
+        } message: {
+            Text("Are you sure you want to archive this \(filament.brand.isEmpty ? "" : filament.brand + " ")\(filament.colorName) \(filament.material) spool? It will be hidden from the main view but can be restored later.")
+        }
+    }
+    
+    private func archiveFilament() {
+        filament.isArchived = true
+        try? modelContext.save()
+        dismiss()
     }
     
     private func formatPrice(_ price: Decimal) -> String {
@@ -208,11 +240,6 @@ struct DetailView: View {
     
     private var sortedLogs: [UsageLog] {
         filament.logs.sorted { $0.date > $1.date }
-    }
-    
-    private func archiveFilament() {
-        filament.isArchived = true
-        dismiss()
     }
 }
 

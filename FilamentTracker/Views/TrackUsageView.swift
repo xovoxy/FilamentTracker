@@ -213,7 +213,8 @@ struct TrackUsageView: View {
     private var isValidForm: Bool {
         !usageItems.isEmpty && usageItems.allSatisfy { item in
             if let amount = Double(item.amountGrams), amount > 0 {
-                return true
+                // Check that amount doesn't exceed remaining weight
+                return amount <= item.filament.remainingWeight
             }
             return false
         }
@@ -285,6 +286,7 @@ struct FilamentUsageRow: View {
     let filaments: [Filament]
     let onDelete: () -> Void
     @State private var showFilamentPicker = false
+    @State private var showAutoAdjustmentHint = false
     
     var body: some View {
         VStack(spacing: 12) {
@@ -364,6 +366,24 @@ struct FilamentUsageRow: View {
                         .textFieldStyle(UsageTextFieldStyle())
                         .keyboardType(.decimalPad)
                         .frame(width: 100)
+                        .onChange(of: item.amountGrams) { oldValue, newValue in
+                            // Validate input - only allow numbers and decimal point
+                            let filtered = newValue.filter { $0.isNumber || $0 == "." }
+                            if filtered != newValue {
+                                item.amountGrams = filtered
+                                return
+                            }
+                            
+                            // Auto-adjust if exceeds remaining weight
+                            if let amount = Double(newValue), amount > item.filament.remainingWeight {
+                                item.amountGrams = String(format: "%.0f", item.filament.remainingWeight)
+                                showAutoAdjustmentHint = true
+                                // Hide hint after 3 seconds
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                                    showAutoAdjustmentHint = false
+                                }
+                            }
+                        }
                     
                     Text("g")
                         .font(.subheadline)
@@ -371,23 +391,52 @@ struct FilamentUsageRow: View {
                 }
             }
             
-            // Preview: Remaining amount
+            // Show remaining amount and auto-adjustment hint
             if let amount = Double(item.amountGrams), amount > 0 {
                 let newRemaining = max(0, item.filament.remainingWeight - amount)
-                HStack {
-                    Text("Remaining:")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                
+                VStack(spacing: 4) {
+                    HStack {
+                        Text("Remaining:")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Text("\(Int(newRemaining))g")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(newRemaining < 50 ? .red : .primary)
+                    }
                     
-                    Spacer()
-                    
-                    Text("\(Int(newRemaining))g")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(newRemaining < 50 ? .red : .primary)
+                    if showAutoAdjustmentHint {
+                        HStack {
+                            Image(systemName: "info.circle.fill")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                            Text("Automatically adjusted to remaining: \(Int(item.filament.remainingWeight))g")
+                                .font(.caption2)
+                                .foregroundColor(.blue)
+                        }
+                    }
                 }
                 .padding(.top, 4)
             }
+            
+            // Show available amount hint
+            HStack {
+                Text("Available:")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text("\(Int(item.filament.remainingWeight))g")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, 2)
         }
         .padding(12)
         .background(Color(.systemGray6).opacity(0.5))
@@ -462,9 +511,19 @@ struct FilamentSelectionView: View {
                                 Text("\(filament.colorName) \(filament.material)")
                                     .foregroundColor(.primary)
                                 
-                                Text(filament.brand)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                HStack(spacing: 4) {
+                                    Text(filament.brand.isEmpty ? "Unknown Brand" : filament.brand)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text("•")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text("剩余: \(Int(filament.remainingWeight))g")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                             
                             Spacer()

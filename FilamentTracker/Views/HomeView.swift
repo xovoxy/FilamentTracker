@@ -59,38 +59,55 @@ struct HomeView: View {
     @State private var showAddMaterial = false
     @State private var showLogUsage = false
     @State private var showMenu = false
-    @State private var showSettings = false
+    @State private var showArchiveManagement = false
     @State private var showProfile = false
     @State private var selectedGroup: FilamentGroup?
     @State private var groupToEdit: FilamentGroup?
-    @State private var groupToDelete: FilamentGroup?
-    @State private var showDeleteAlert = false
+    @State private var groupToArchive: FilamentGroup?
+    @State private var showArchiveAlert = false
+    @State private var selectedMaterialFilter: String? = nil
     
-    // Calculate total stock in kg
-    var totalStock: Double {
-        filaments.reduce(0) { $0 + $1.remainingWeight } / 1000.0
+    // Get filtered filaments based on material filter
+    var filteredFilaments: [Filament] {
+        if let selectedMaterial = selectedMaterialFilter {
+            return filaments.filter { $0.material == selectedMaterial }
+        } else {
+            return filaments
+        }
     }
     
-    // Calculate total usage in meters (approximate conversion)
+    // Calculate total stock count (based on filter)
+    var totalStock: Int {
+        filteredFilaments.count
+    }
+    
+    // Calculate total usage in grams (based on filter)
     var totalUsage: Double {
-        let totalGrams = usageLogs.reduce(0) { $0 + $1.amount }
-        // Approximate conversion: 1kg PLA ≈ 330m (for 1.75mm diameter)
-        return (totalGrams / 1000.0) * 330.0
+        // Filter usage logs to only include those from filtered filaments
+        let filteredLogs = usageLogs.filter { log in
+            guard let filament = log.filament else { return false }
+            
+            // If material filter is selected, check if filament's material matches
+            if let selectedMaterial = selectedMaterialFilter {
+                return filament.material == selectedMaterial
+            } else {
+                return true
+            }
+        }
+        
+        return filteredLogs.reduce(0) { $0 + $1.amount }
     }
     
-    // Find most used color
-    var mostUsedColor: (color: String, percentage: Double)? {
-        guard !filaments.isEmpty else { return nil }
+    // Find most used color (by usage amount, not count)
+    var mostUsedColor: (color: String, material: String, colorHex: String, percentage: Double)? {
+        guard !groupedFilaments.isEmpty, totalUsage > 0 else { return nil }
         
-        let colorCounts = Dictionary(grouping: filaments, by: { $0.colorName })
-            .mapValues { $0.count }
-        
-        guard let mostUsed = colorCounts.max(by: { $0.value < $1.value }) else {
+        guard let mostUsedGroup = groupedFilaments.max(by: { $0.totalUsed < $1.totalUsed }) else {
             return nil
         }
         
-        let percentage = Double(mostUsed.value) / Double(filaments.count) * 100.0
-        return (mostUsed.key, percentage)
+        let percentage = (mostUsedGroup.totalUsed / totalUsage) * 100.0
+        return (mostUsedGroup.colorName, mostUsedGroup.material, mostUsedGroup.colorHex, percentage)
     }
     
     // Group filaments by color and material
@@ -99,7 +116,7 @@ struct HomeView: View {
             "\(filament.colorName)-\(filament.material)"
         }
         
-        return grouped.compactMap { (_, filaments) -> FilamentGroup? in
+        let allGroups = grouped.compactMap { (_, filaments) -> FilamentGroup? in
             guard let first = filaments.first else { return nil }
             // Sort filaments by remaining weight (descending)
             let sortedFilaments = filaments.sorted { $0.remainingWeight > $1.remainingWeight }
@@ -109,16 +126,39 @@ struct HomeView: View {
                 material: first.material,
                 filaments: sortedFilaments
             )
-        }.sorted { $0.totalRemaining > $1.totalRemaining }
+        }
+        
+        // Apply material filter if selected
+        if let selectedMaterial = selectedMaterialFilter {
+            return allGroups.filter { $0.material == selectedMaterial }
+                .sorted { $0.averagePercentage < $1.averagePercentage }
+        } else {
+            return allGroups.sorted { $0.averagePercentage < $1.averagePercentage }
+        }
     }
     
-    // Delete all filaments in a group
-    private func deleteGroup(_ group: FilamentGroup) {
+    // Get all available material types
+    var availableMaterials: [String] {
+        let materials = Set(filaments.map { $0.material })
+        return Array(materials).sorted()
+    }
+    
+    // Archive all filaments in a group
+    private func archiveGroup(_ group: FilamentGroup) {
         for filament in group.filaments {
-            modelContext.delete(filament)
+            filament.isArchived = true
         }
         try? modelContext.save()
-        groupToDelete = nil
+        groupToArchive = nil
+    }
+    
+    // Format usage value - use kg if >= 1000g, otherwise use g
+    private func formatUsage(_ grams: Double) -> String {
+        if grams >= 1000 {
+            return String(format: "%.1f kg", grams / 1000.0)
+        } else {
+            return String(format: "%.0f g", grams)
+        }
     }
     
     var body: some View {
@@ -136,19 +176,16 @@ struct HomeView: View {
                 .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            // Summary Cards Section
-                            summaryCardsSection
-                                .padding(.horizontal)
-                                .padding(.top, 8)
-                            
-                            // Current Inventory Section
-                            currentInventorySection
-                                .padding(.horizontal)
-                                .padding(.bottom, 20)
-                        }
-                    }
+                    // Summary Cards Section - Fixed at top
+                    summaryCardsSection
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                        .padding(.bottom, 20)
+                    
+                    // Current Inventory Section - Scrollable
+                    currentInventorySection
+                        .padding(.horizontal)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     
                     // Action Buttons Section - Fixed at bottom
                     actionButtonsSection
@@ -184,16 +221,23 @@ struct HomeView: View {
                 }
                 
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    // TODO: Settings Gear Icon
-                    Button(action: { showSettings = true }) {
+                    // Settings Menu
+                    Menu {
+                        Button {
+                            showArchiveManagement = true
+                        } label: {
+                            Label("Archive Management", systemImage: "archivebox")
+                        }
+                        
+                        Divider()
+                        
+                        Button {
+                            showProfile = true
+                        } label: {
+                            Label("Profile", systemImage: "person.circle")
+                        }
+                    } label: {
                         Image(systemName: "gearshape")
-                            .font(.title3)
-                            .foregroundColor(.primary)
-                    }
-                    
-                    // TODO: User Profile Icon
-                    Button(action: { showProfile = true }) {
-                        Image(systemName: "person.circle")
                             .font(.title3)
                             .foregroundColor(.primary)
                     }
@@ -218,19 +262,22 @@ struct HomeView: View {
                     GroupEditView(group: group)
                 }
             }
-            .alert("Delete Filaments", isPresented: $showDeleteAlert) {
+            .sheet(isPresented: $showArchiveManagement) {
+                ArchiveManagementView()
+            }
+            .alert("Archive Filaments", isPresented: $showArchiveAlert) {
                 Button("Cancel", role: .cancel) {
-                    groupToDelete = nil
+                    groupToArchive = nil
                 }
-                Button("Delete", role: .destructive) {
-                    if let group = groupToDelete {
-                        deleteGroup(group)
-                        groupToDelete = nil
+                Button("Archive", role: .destructive) {
+                    if let group = groupToArchive {
+                        archiveGroup(group)
+                        groupToArchive = nil
                     }
                 }
             } message: {
-                if let group = groupToDelete {
-                    Text("Are you sure you want to delete \(group.totalCount) spool\(group.totalCount > 1 ? "s" : "") of \(group.colorName) \(group.material)?")
+                if let group = groupToArchive {
+                    Text("Are you sure you want to archive \(group.totalCount) spool\(group.totalCount > 1 ? "s" : "") of \(group.colorName) \(group.material)? They will be hidden from the main view but can be restored later.")
                 }
             }
         }
@@ -249,7 +296,7 @@ struct HomeView: View {
                         .frame(width: 64, height: 64)
                 },
                 title: "Total Stock",
-                value: String(format: "%.1f kg", totalStock),
+                value: "\(totalStock)",
                 backgroundColor: Color(hex: "#7FD4B0")
             )
             
@@ -263,7 +310,7 @@ struct HomeView: View {
                         .frame(width: 64, height: 64)
                 },
                 title: "Total Usage",
-                value: String(format: "%.0f m", totalUsage),
+                value: formatUsage(totalUsage),
                 backgroundColor: Color(hex: "#8BC5D9")
             )
             
@@ -277,7 +324,24 @@ struct HomeView: View {
                         .frame(width: 64, height: 64)
                 },
                 title: "Most Used",
-                value: mostUsedColor.map { $0.color } ?? "N/A",
+                valueView: {
+                    if let mostUsed = mostUsedColor {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(Color(hex: mostUsed.colorHex))
+                                .frame(width: 18, height: 18)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
+                                )
+                            Text(mostUsed.material)
+                                .font(.system(size: 18, weight: .bold))
+                        }
+                    } else {
+                        Text("N/A")
+                            .font(.system(size: 18, weight: .bold))
+                    }
+                },
                 backgroundColor: Color(hex: "#B88A5A")
             )
         }
@@ -291,28 +355,54 @@ struct HomeView: View {
                 .fontWeight(.semibold)
                 .padding(.horizontal, 4)
             
+            // Material Filter - Horizontal Scrollable Chips
+            if !availableMaterials.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        // All Materials option
+                        FilterChip(
+                            title: "All",
+                            isSelected: selectedMaterialFilter == nil
+                        ) {
+                            selectedMaterialFilter = nil
+                        }
+                        
+                        // Material type options
+                        ForEach(availableMaterials, id: \.self) { material in
+                            FilterChip(
+                                title: material,
+                                isSelected: selectedMaterialFilter == material
+                            ) {
+                                selectedMaterialFilter = material
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 4)
+                }
+            }
+            
             if groupedFilaments.isEmpty {
                 EmptyInventoryView()
             } else {
-                List {
-                    ForEach(groupedFilaments) { group in
-                        GroupedInventoryRow(
-                            group: group,
-                            onTap: { selectedGroup = group },
-                            onDelete: {
-                                groupToDelete = group
-                                showDeleteAlert = true
-                            }
-                        )
-                        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
+                ScrollView {
+                    VStack(spacing: 8) {
+                        ForEach(groupedFilaments) { group in
+                            GroupedInventoryRow(
+                                group: group,
+                                onTap: { selectedGroup = group },
+                                onArchive: {
+                                    groupToArchive = group
+                                    showArchiveAlert = true
+                                }
+                            )
+                        }
                     }
+                    .padding(.bottom, 20)
                 }
-                .listStyle(.plain)
-                .frame(minHeight: CGFloat(min(groupedFilaments.count, 3)) * 90)
+                .frame(maxWidth: .infinity)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     // MARK: - Action Buttons Section
@@ -348,11 +438,25 @@ struct HomeView: View {
 }
 
 // MARK: - Summary Card
-struct SummaryCard<Icon: View>: View {
+struct SummaryCard<Icon: View, ValueView: View>: View {
     let icon: () -> Icon
     let title: String
-    let value: String
+    @ViewBuilder let valueView: () -> ValueView
     let backgroundColor: Color
+    
+    init(icon: @escaping () -> Icon, title: String, value: String, backgroundColor: Color) where ValueView == Text {
+        self.icon = icon
+        self.title = title
+        self.valueView = { Text(value).font(.system(size: 18, weight: .bold)) }
+        self.backgroundColor = backgroundColor
+    }
+    
+    init(icon: @escaping () -> Icon, title: String, @ViewBuilder valueView: @escaping () -> ValueView, backgroundColor: Color) {
+        self.icon = icon
+        self.title = title
+        self.valueView = valueView
+        self.backgroundColor = backgroundColor
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -368,8 +472,7 @@ struct SummaryCard<Icon: View>: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
-            Text(value)
-                .font(.system(size: 18, weight: .bold))
+            valueView()
                 .foregroundColor(.primary)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -453,7 +556,7 @@ struct InventoryItemRow: View {
 struct GroupedInventoryRow: View {
     let group: FilamentGroup
     let onTap: () -> Void
-    let onDelete: () -> Void
+    let onArchive: () -> Void
     
     var body: some View {
         VStack(spacing: 4) {
@@ -461,7 +564,7 @@ struct GroupedInventoryRow: View {
                 // Color Indicator
                 Circle()
                     .fill(Color(hex: group.colorHex))
-                    .frame(width: 16, height: 16)
+                    .frame(width: 20, height: 20)
                     .overlay(
                         Circle()
                             .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
@@ -522,8 +625,8 @@ struct GroupedInventoryRow: View {
             onTap()
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-            Button(role: .destructive, action: onDelete) {
-                Label("Delete", systemImage: "trash")
+            Button(role: .destructive, action: onArchive) {
+                Label("Archive", systemImage: "archivebox")
             }
         }
     }
@@ -627,21 +730,21 @@ struct ColorMaterialStatsSheet: View {
                                 title: "Spools",
                                 value: "\(group.totalCount)",
                                 icon: "cylinder.split.1x2",
-                                color: Color(hex: "#F7B2A7")
+                                color: Color(hex: "#D97A6A")
                             )
                             
                             GroupStatsCard(
                                 title: "Remaining",
                                 value: String(format: "%.1f kg", group.totalRemaining / 1000.0 ),
                                 icon: "scalemass",
-                                color: Color(hex: "#C8BFE7")
+                                color: Color(hex: "#8A7BC4")
                             )
                             
                             GroupStatsCard(
                                 title: "Used",
                                 value: String(format: "%.0f g", group.totalUsed),
                                 icon: "arrow.down.circle",
-                                color: Color(hex: "#A0C49D")
+                                color: Color(hex: "#6B9563")
                             )
                         }
                         .padding(.horizontal)
@@ -722,7 +825,7 @@ struct GroupStatsCard: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(color)
+                .foregroundColor(.black)
             
             Text(value)
                 .font(.headline)
@@ -930,8 +1033,8 @@ struct GroupEditView: View {
     let group: FilamentGroup
     
     @State private var filamentToEdit: Filament?
-    @State private var filamentToDelete: Filament?
-    @State private var showDeleteFilamentAlert = false
+    @State private var filamentToArchive: Filament?
+    @State private var showArchiveFilamentAlert = false
     @State private var displayedFilaments: [Filament] = []
     @State private var isInitialized = false
     
@@ -943,7 +1046,7 @@ struct GroupEditView: View {
         isInitialized = true
     }
     
-    // Remove a filament from the displayed list (after confirmed deletion)
+    // Remove a filament from the displayed list (after confirmed archiving)
     private func removeFromDisplayedList(_ filament: Filament) {
         displayedFilaments.removeAll { $0.id == filament.id }
     }
@@ -986,10 +1089,10 @@ struct GroupEditView: View {
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
-                                        filamentToDelete = filament
-                                        showDeleteFilamentAlert = true
+                                        filamentToArchive = filament
+                                        showArchiveFilamentAlert = true
                                     } label: {
-                                        Label("Delete", systemImage: "trash")
+                                        Label("Archive", systemImage: "archivebox")
                                     }
                                 }
                                 .listRowBackground(Color(.systemBackground).opacity(0.9))
@@ -997,7 +1100,7 @@ struct GroupEditView: View {
                     } header: {
                         Text("Spools")
                     } footer: {
-                        Text("Swipe left on any spool to delete")
+                        Text("Swipe left on any spool to archive")
                             .font(.caption)
                     }
                 }
@@ -1020,28 +1123,28 @@ struct GroupEditView: View {
         .sheet(item: $filamentToEdit) { filament in
             AddMaterialView(filament: filament)
         }
-        .alert("Delete Spool", isPresented: $showDeleteFilamentAlert) {
+        .alert("Archive Spool", isPresented: $showArchiveFilamentAlert) {
             Button("Cancel", role: .cancel) {
-                filamentToDelete = nil
+                filamentToArchive = nil
             }
-            Button("Delete", role: .destructive) {
-                if let filament = filamentToDelete {
-                    deleteFilament(filament)
-                    filamentToDelete = nil
+            Button("Archive", role: .destructive) {
+                if let filament = filamentToArchive {
+                    archiveFilament(filament)
+                    filamentToArchive = nil
                 }
             }
         } message: {
-            if let filament = filamentToDelete {
-                Text("Are you sure you want to delete this \(filament.brand.isEmpty ? "" : filament.brand + " ")\(filament.colorName) \(filament.material) spool?")
+            if let filament = filamentToArchive {
+                Text("Are you sure you want to archive this \(filament.brand.isEmpty ? "" : filament.brand + " ")\(filament.colorName) \(filament.material) spool? It will be hidden from the main view but can be restored later.")
             }
         }
     }
     
-    private func deleteFilament(_ filament: Filament) {
+    private func archiveFilament(_ filament: Filament) {
         // First remove from displayed list (immediate UI update)
         removeFromDisplayedList(filament)
-        // Then delete from database
-        modelContext.delete(filament)
+        // Then archive
+        filament.isArchived = true
         try? modelContext.save()
     }
 }

@@ -149,9 +149,13 @@ struct FilterChip: View {
                 .fontWeight(.medium)
                 .foregroundColor(isSelected ? .white : .primary)
                 .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color.teal : Color(.systemGray6))
+                .padding(.vertical, 10)
+                .background(isSelected ? Color(hex: "#8B9A7D") : Color(.systemBackground))
                 .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(isSelected ? Color.clear : Color.gray.opacity(0.3), lineWidth: 1)
+                )
         }
     }
 }
