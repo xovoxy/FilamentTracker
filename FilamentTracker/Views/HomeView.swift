@@ -299,7 +299,6 @@ struct HomeView: View {
                         GroupedInventoryRow(
                             group: group,
                             onTap: { selectedGroup = group },
-                            onEdit: { groupToEdit = group },
                             onDelete: {
                                 groupToDelete = group
                                 showDeleteAlert = true
@@ -454,7 +453,6 @@ struct InventoryItemRow: View {
 struct GroupedInventoryRow: View {
     let group: FilamentGroup
     let onTap: () -> Void
-    let onEdit: () -> Void
     let onDelete: () -> Void
     
     var body: some View {
@@ -527,10 +525,6 @@ struct GroupedInventoryRow: View {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
             }
-            Button(action: onEdit) {
-                Label("Edit", systemImage: "pencil")
-            }
-            .tint(.blue)
         }
     }
     

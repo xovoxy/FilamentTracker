@@ -17,221 +17,68 @@ struct DetailView: View {
     @State private var showEditSheet = false
     @State private var showLogUsageSheet = false
     
+    // Calculate total used weight in grams
+    private var totalUsedWeight: Double {
+        filament.logs.reduce(0) { $0 + $1.amount }
+    }
+    
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Header with color representation
-                VStack(spacing: 16) {
-                    Circle()
-                        .fill(Color(hex: filament.colorHex))
-                        .frame(width: 120, height: 120)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.white, lineWidth: 4)
-                        )
-                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+        ZStack {
+            // Background gradient matching home page
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color(hex: "#EBEBE0"), // Warm beige at top-left
+                    Color(hex: "#E0EBF0")  // Cool beige with light blue hint at bottom-right
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Filament Summary Card
+                    filamentSummaryCard
+                        .padding(.horizontal)
+                        .padding(.top, 8)
                     
-                    VStack(spacing: 4) {
-                        Text(filament.brand)
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text("\(filament.material) • \(filament.colorName)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.top)
-                
-                // Stats
-                HStack(spacing: 32) {
-                    StatItem(
-                        title: "Remaining",
-                        value: "\(Int(filament.remainingPercentage))%",
-                        icon: "gauge"
-                    )
-                    
-                    StatItem(
-                        title: "Days",
-                        value: "\(filament.daysSincePurchase)",
-                        icon: "calendar"
-                    )
-                    
-                    StatItem(
-                        title: "Prints",
-                        value: "\(filament.logs.count)",
-                        icon: "printer"
-                    )
-                }
-                .padding()
-                
-                // Detailed Information Section
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Details")
-                        .font(.headline)
+                    // Key Metrics Section
+                    keyMetricsSection
                         .padding(.horizontal)
                     
-                    VStack(spacing: 12) {
-                        // Remaining Weight
-                        DetailInfoRow(
-                            icon: "scalemass",
-                            title: "Remaining Weight",
-                            value: String(format: "%.1f g", filament.remainingWeight)
-                        )
-                        
-                        // Initial Weight
-                        DetailInfoRow(
-                            icon: "cube.box",
-                            title: "Initial Weight",
-                            value: String(format: "%.1f g", filament.initialWeight)
-                        )
-                        
-                        // Price
-                        if let price = filament.price {
-                            DetailInfoRow(
-                                icon: "dollarsign.circle",
-                                title: "Price",
-                                value: formatPrice(price)
-                            )
-                        }
-                        
-                        // Notes
-                        if let notes = filament.notes, !notes.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "note.text")
-                                        .foregroundColor(.teal)
-                                        .frame(width: 20)
-                                    Text("Notes")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                }
-                                
-                                Text(notes)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .padding(.leading, 28)
-                            }
-                            .padding(.vertical, 8)
-                        }
-                        
-                        // Additional Info
-                        VStack(alignment: .leading, spacing: 8) {
-                            if let diameter = Optional(filament.diameter), diameter > 0 {
-                                DetailInfoRow(
-                                    icon: "circle.dotted",
-                                    title: "Diameter",
-                                    value: String(format: "%.2f mm", diameter)
-                                )
-                            }
-                            
-                            if let emptySpoolWeight = filament.emptySpoolWeight {
-                                DetailInfoRow(
-                                    icon: "scalemass.fill",
-                                    title: "Empty Spool Weight",
-                                    value: String(format: "%.1f g", emptySpoolWeight)
-                                )
-                            }
-                            
-                            if let density = filament.density {
-                                DetailInfoRow(
-                                    icon: "drop.fill",
-                                    title: "Density",
-                                    value: String(format: "%.2f g/cm³", density)
-                                )
-                            }
-                            
-                            DetailInfoRow(
-                                icon: "calendar",
-                                title: "Purchase Date",
-                                value: filament.purchaseDate.formatted(date: .abbreviated, time: .omitted)
-                            )
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                    .padding(.horizontal)
-                }
-                .padding(.vertical)
-                
-                // Usage chart
-                if !filament.logs.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Usage Over Time")
-                            .font(.headline)
+                    // Usage Trend Chart
+                    if !filament.logs.isEmpty {
+                        usageTrendSection
                             .padding(.horizontal)
-                        
-                        UsageHistoryChart(filament: filament)
-                            .frame(height: 200)
-                            .padding()
                     }
-                    .background(Color(.systemBackground))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
-                    .padding(.horizontal)
-                }
-                
-                // History
-                if !filament.logs.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("History")
-                            .font(.headline)
+                    
+                    // Usage History
+                    if !filament.logs.isEmpty {
+                        usageHistorySection
                             .padding(.horizontal)
-                        
-                        ForEach(filament.logs.sorted { $0.date > $1.date }) { log in
-                            HistoryRow(log: log)
-                        }
                     }
-                    .padding(.horizontal)
                 }
+                .padding(.bottom, 20)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Material Detail")
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                }
-            }
-            
             ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button {
-                        showLogUsageSheet = true
-                    } label: {
-                        Label("Log Usage", systemImage: "plus.circle")
-                    }
-                    
-                    Button {
-                        showEditSheet = true
-                    } label: {
-                        Label("Edit", systemImage: "pencil")
-                    }
-                    
-                    Button(role: .destructive) {
-                        archiveFilament()
-                    } label: {
-                        Label("Archive", systemImage: "archivebox")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
+                Button(action: { showEditSheet = true }) {
+                    Text("Edit")
+                        .foregroundColor(.blue)
                 }
             }
         }
         .sheet(isPresented: $showEditSheet) {
-            AddMaterialView(filament: filament)
+            NavigationStack {
+                AddMaterialView(filament: filament)
+            }
         }
         .sheet(isPresented: $showLogUsageSheet) {
             TrackUsageView(filament: filament)
         }
-    }
-    
-    private func archiveFilament() {
-        filament.isArchived = true
-        dismiss()
     }
     
     private func formatPrice(_ price: Decimal) -> String {
@@ -241,135 +88,298 @@ struct DetailView: View {
         formatter.maximumFractionDigits = 2
         return formatter.string(from: price as NSDecimalNumber) ?? "\(price)"
     }
+    
+    // MARK: - Filament Summary Card
+    private var filamentSummaryCard: some View {
+        HStack(spacing: 16) {
+            // Color Swatch
+            Circle()
+                .fill(Color(hex: filament.colorHex))
+                .frame(width: 80, height: 80)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white, lineWidth: 3)
+                )
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            
+            // Filament Info
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(filament.colorName) \(filament.material)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    InfoRow(label: "Material Type:", value: filament.material)
+                    
+                    InfoRow(
+                        label: "Brand:",
+                        value: filament.brand.isEmpty ? "Unknown" : filament.brand
+                    )
+                    
+                    InfoRow(
+                        label: "Diameter:",
+                        value: String(format: "%.2f mm", filament.diameter)
+                    )
+                    
+                    if let notes = filament.notes, !notes.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Notes:")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text(notes)
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.top, 2)
+                    }
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+    }
+    
+    // MARK: - Key Metrics Section
+    private var keyMetricsSection: some View {
+        HStack(spacing: 12) {
+            // Stock Card
+            MetricCard(
+                icon: "cylinder.split.1x2",
+                title: "Stock",
+                value: String(format: "%.1f kg", filament.remainingWeight / 1000.0),
+                color: Color(hex: "#D4A574")
+            )
+            
+            // Usage Rate Card
+            MetricCard(
+                icon: "percent",
+                title: "Usage Rate",
+                value: String(format: "%.0f%%", 100 - filament.remainingPercentage),
+                color: Color(hex: "#A0C49D")
+            )
+            
+            // Price Card
+            MetricCard(
+                icon: "dollarsign.circle",
+                title: "Price",
+                value: filament.price != nil ? formatPrice(filament.price!) : "N/A",
+                color: Color(hex: "#8BC5D9")
+            )
+        }
+    }
+    
+    // MARK: - Usage Trend Section
+    private var usageTrendSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Usage Trend")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .padding(.horizontal, 4)
+            
+            UsageTrendChart(filament: filament)
+                .frame(height: 200)
+                .padding()
+                .background(Color(.systemBackground))
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+        }
+    }
+    
+    // MARK: - Usage History Section
+    private var usageHistorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Usage History")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .padding(.horizontal, 4)
+            
+            VStack(spacing: 8) {
+                ForEach(sortedLogs.prefix(10)) { log in
+                    UsageHistoryRow(log: log, filament: filament)
+                }
+            }
+        }
+    }
+    
+    private var sortedLogs: [UsageLog] {
+        filament.logs.sorted { $0.date > $1.date }
+    }
+    
+    private func archiveFilament() {
+        filament.isArchived = true
+        dismiss()
+    }
 }
 
-struct StatItem: View {
+// MARK: - Info Row
+struct InfoRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+    }
+}
+
+// MARK: - Metric Card
+struct MetricCard: View {
+    let icon: String
     let title: String
     let value: String
-    let icon: String
+    let color: Color
     
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(.teal)
+                .foregroundColor(color)
+                .frame(height: 32)
             
             Text(value)
-                .font(.title2)
+                .font(.title3)
                 .fontWeight(.bold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
 
-struct UsageHistoryChart: View {
+// MARK: - Usage Trend Chart
+struct UsageTrendChart: View {
     let filament: Filament
     
     var body: some View {
         Chart {
-            ForEach(weightHistory, id: \.date) { point in
+            ForEach(dailyUsage, id: \.date) { data in
                 LineMark(
-                    x: .value("Date", point.date),
-                    y: .value("Weight", point.weight)
+                    x: .value("Date", data.date, unit: .day),
+                    y: .value("Usage", data.amount)
                 )
-                .foregroundStyle(Color.teal)
+                .foregroundStyle(Color(hex: "#A0C49D"))
                 .interpolationMethod(.catmullRom)
+                .symbol {
+                    Circle()
+                        .fill(Color(hex: "#A0C49D"))
+                        .frame(width: 8, height: 8)
+                }
             }
         }
         .chartXAxis {
             AxisMarks(values: .stride(by: .day)) { _ in
                 AxisGridLine()
-                AxisValueLabel(format: .dateTime.month().day())
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+            }
+        }
+        .chartYAxis {
+            AxisMarks { value in
+                AxisGridLine()
+                AxisValueLabel {
+                    if let amount = value.as(Double.self) {
+                        Text("\(Int(amount))g")
+                    }
+                }
             }
         }
     }
     
-    private var weightHistory: [(date: Date, weight: Double)] {
-        guard !filament.logs.isEmpty else {
-            return [(date: filament.purchaseDate, weight: filament.initialWeight)]
+    private var dailyUsage: [(date: Date, amount: Double)] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: filament.logs) { log in
+            calendar.startOfDay(for: log.date)
         }
         
-        var history: [(date: Date, weight: Double)] = []
-        var currentWeight = filament.initialWeight
-        
-        history.append((date: filament.purchaseDate, weight: currentWeight))
-        
-        for log in filament.logs.sorted(by: { $0.date < $1.date }) {
-            currentWeight -= log.amount
-            history.append((date: log.date, weight: max(0, currentWeight)))
+        return grouped.map { (date, logs) in
+            let dayUsage = logs.reduce(0.0) { $0 + $1.amount }
+            return (date: date, amount: dayUsage)
         }
-        
-        return history
+        .sorted { $0.date < $1.date }
+        .suffix(14) // Show last 14 days
+        .map { $0 }
     }
 }
 
-struct HistoryRow: View {
+// MARK: - Usage History Row
+struct UsageHistoryRow: View {
     let log: UsageLog
+    let filament: Filament
+    
+    // Get icon based on usage type or note
+    private var iconName: String {
+        switch log.usageType {
+        case .print:
+            return "printer.fill"
+        case .failedPrint:
+            return "exclamationmark.triangle.fill"
+        case .calibration:
+            return "gearshape.fill"
+        case .manualAdjustment:
+            return "hand.point.up.left.fill"
+        }
+    }
     
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            // Icon
+            Image(systemName: iconName)
+                .font(.title3)
+                .foregroundColor(.teal)
+                .frame(width: 32, height: 32)
+                .background(Color.teal.opacity(0.1))
+                .cornerRadius(8)
+            
+            // Date and Project Name
             VStack(alignment: .leading, spacing: 4) {
-                Text(log.note ?? "Usage")
-                    .font(.headline)
-                
                 Text(log.date, style: .date)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                Text(log.note ?? log.usageType.displayName)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("-\(Int(log.amount))g")
-                    .font(.headline)
-                    .foregroundColor(.red)
-                
-                Text(log.usageType.displayName)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+            // Weight
+            Text(String(format: "%.0f g", log.amount))
+                .font(.subheadline)
+                .fontWeight(.semibold)
         }
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
-    }
-}
-
-struct DetailInfoRow: View {
-    let icon: String
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(.teal)
-                .frame(width: 20)
-            
-            Text(title)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.medium)
-        }
-        .padding(.vertical, 4)
+        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
 
 #Preview {
     NavigationStack {
         DetailView(filament: Filament(
-            brand: "Bambu Lab",
+            brand: "Prusament",
             material: "PLA",
-            colorName: "Black",
-            colorHex: "#000000",
+            colorName: "Olive Green",
+            colorHex: "#808000",
             initialWeight: 1000,
             remainingWeight: 750
         ))
