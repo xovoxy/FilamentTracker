@@ -2,11 +2,24 @@
 //  TrackUsageView.swift
 //  FilamentTracker
 //
-//  View for logging filament usage - redesigned to match design spec
+//  View for logging filament usage - supports multiple filaments per print job
 //
 
 import SwiftUI
 import SwiftData
+
+// MARK: - Filament Usage Item
+struct FilamentUsageItem: Identifiable {
+    let id: UUID
+    var filament: Filament
+    var amountGrams: String
+    
+    init(id: UUID = UUID(), filament: Filament, amountGrams: String = "") {
+        self.id = id
+        self.filament = filament
+        self.amountGrams = amountGrams
+    }
+}
 
 struct TrackUsageView: View {
     @Environment(\.modelContext) private var modelContext
@@ -16,15 +29,11 @@ struct TrackUsageView: View {
     /// The filament that launched this sheet (used as default selection)
     let filament: Filament
     
-    // Selection
-    @State private var selectedFilament: Filament?
-    @State private var showFilamentPicker = false
-    
     // PRINT DETAILS
     @State private var printJobName: String = ""
     
-    // USAGE DETAILS (grams only)
-    @State private var amountGrams: String = ""
+    // USAGE ITEMS - support multiple filaments
+    @State private var usageItems: [FilamentUsageItem] = []
     
     init(filament: Filament) {
         self.filament = filament
@@ -52,9 +61,6 @@ struct TrackUsageView: View {
                             
                             // USAGE DETAILS Card
                             usageDetailsCard
-                            
-                            // MATERIAL PREVIEW Card
-                            materialPreviewCard
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 16)
@@ -95,7 +101,7 @@ struct TrackUsageView: View {
                 }
             }
             .onAppear {
-                initializeSelection()
+                initializeItems()
             }
         }
     }
@@ -108,67 +114,10 @@ struct TrackUsageView: View {
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
             
-            let currentFilament = selectedFilament ?? filament
-            
             // Print Job Name
             FormRow(label: "Print Job Name") {
                 TextField("Enter job name.", text: $printJobName)
                     .textFieldStyle(UsageTextFieldStyle())
-            }
-            
-            // Select Spool
-            FormRow(label: "Spool") {
-                Button(action: { showFilamentPicker = true }) {
-                    HStack {
-                        Text("\(currentFilament.colorName) \(currentFilament.material)")
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.down")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
-                }
-                .sheet(isPresented: $showFilamentPicker) {
-                    FilamentSelectionView(
-                        filaments: filaments,
-                        selectedFilament: $selectedFilament,
-                        initialFilament: filament
-                    )
-                }
-            }
-            
-            // Material Brand
-            FormRow(label: "Material Brand") {
-                ValuePill(text: currentFilament.brand.isEmpty ? "Unknown" : currentFilament.brand)
-            }
-            
-            // Color
-            FormRow(label: "Color") {
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(Color(hex: currentFilament.colorHex))
-                        .frame(width: 20, height: 20)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
-                        )
-                    
-                    ValuePill(text: currentFilament.colorName.isEmpty ? "Color" : currentFilament.colorName)
-                }
-            }
-            
-            // Diameter
-            FormRow(label: "Diameter") {
-                ValuePill(
-                    text: String(format: "%.2fmm", currentFilament.diameter)
-                )
             }
         }
         .padding(20)
@@ -180,64 +129,58 @@ struct TrackUsageView: View {
     // MARK: - USAGE DETAILS Card
     private var usageDetailsCard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("USAGE DETAILS")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-            
-            // Amount Used (grams)
-            FormRow(label: "Amount Used") {
-                HStack(spacing: 4) {
-                    TextField("", text: $amountGrams)
-                        .textFieldStyle(UsageTextFieldStyle())
-                        .keyboardType(.decimalPad)
-                    
-                    Text("g")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        .padding(20)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
-    }
-    
-    // MARK: - MATERIAL PREVIEW Card
-    private var materialPreviewCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("MATERIAL PREVIEW")
-                .font(.headline)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-            
-            let currentFilament = selectedFilament ?? filament
-            let newRemaining: Double = {
-                guard let used = calculatedAmount else { return currentFilament.remainingWeight }
-                return max(0, currentFilament.remainingWeight - used)
-            }()
-            
-            HStack(spacing: 16) {
-                // Spool Image
-                Image("usage.spool")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 90)
-                    .foregroundColor(Color(hex: currentFilament.colorHex).opacity(0.6))
+            HStack {
+                Text("USAGE DETAILS")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
                 
                 Spacer()
                 
-                // Current Amount
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Current Amount:")
+                // Add Filament Button
+                Button(action: { addFilamentItem() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.subheadline)
+                        Text("Add Spool")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                    }
+                    .foregroundColor(Color(hex: "#8BC5D9"))
+                }
+            }
+            
+            if usageItems.isEmpty {
+                // Empty state
+                VStack(spacing: 8) {
+                    Image(systemName: "tray")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary)
+                    Text("No spools added")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    
-                    Text("\(Int(newRemaining))g")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                // List of filament usage items
+                VStack(spacing: 12) {
+                    ForEach(usageItems) { item in
+                        FilamentUsageRow(
+                            item: Binding(
+                                get: { item },
+                                set: { newItem in
+                                    if let index = usageItems.firstIndex(where: { $0.id == item.id }) {
+                                        usageItems[index] = newItem
+                                    }
+                                }
+                            ),
+                            filaments: filaments,
+                            onDelete: {
+                                deleteItem(item)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -249,7 +192,6 @@ struct TrackUsageView: View {
     
     // MARK: - Bottom Buttons
     private var bottomButtons: some View {
-        // 单一 Log Usage 主按钮
         Button(action: { saveUsage() }) {
             Text("Log Usage")
                 .font(.subheadline)
@@ -258,62 +200,198 @@ struct TrackUsageView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(
-                    calculatedAmount != nil && calculatedAmount! > 0
+                    isValidForm
                         ? Color(hex: "#8BC5D9")
                         : Color.gray.opacity(0.4)
                 )
                 .cornerRadius(12)
         }
-        .disabled(calculatedAmount == nil || calculatedAmount! <= 0)
+        .disabled(!isValidForm)
     }
     
-    // MARK: - Calculation
-    private var calculatedAmount: Double? {
-        guard let value = Double(amountGrams), value > 0 else { return nil }
-        return value
+    // MARK: - Validation
+    private var isValidForm: Bool {
+        !usageItems.isEmpty && usageItems.allSatisfy { item in
+            if let amount = Double(item.amountGrams), amount > 0 {
+                return true
+            }
+            return false
+        }
     }
     
     // MARK: - Actions
-    private func initializeSelection() {
-        // Prefer the filament passed in, but allow switching to any active filament
-        if selectedFilament == nil {
+    private func initializeItems() {
+        // Initialize with the filament that launched this view
+        if usageItems.isEmpty {
             if let match = filaments.first(where: { $0.id == filament.id }) {
-                selectedFilament = match
-            } else {
-                selectedFilament = filaments.first ?? filament
+                usageItems = [FilamentUsageItem(filament: match)]
+            } else if let first = filaments.first {
+                usageItems = [FilamentUsageItem(filament: first)]
             }
         }
     }
     
+    private func addFilamentItem() {
+        // Add a new item with the first available filament (or the default one)
+        let defaultFilament = filaments.first(where: { $0.id == filament.id }) ?? filaments.first ?? filament
+        usageItems.append(FilamentUsageItem(filament: defaultFilament))
+    }
+    
+    private func deleteItem(_ item: FilamentUsageItem) {
+        usageItems.removeAll { $0.id == item.id }
+    }
+    
     private func clearForm() {
         printJobName = ""
-        amountGrams = ""
-        // 保持当前选中的耗材不变，只清空当前这次打印的信息
+        usageItems.removeAll()
+        initializeItems()
     }
     
     private func saveUsage() {
-        guard let amount = calculatedAmount, amount > 0 else { return }
-        let targetFilament = selectedFilament ?? filament
+        guard isValidForm else { return }
         
-        let log = UsageLog(
-            amount: amount,
-            date: Date(),
-            note: printJobName.isEmpty ? nil : printJobName,
-            type: .print,
-            filament: targetFilament
-        )
+        let jobName = printJobName.isEmpty ? nil : printJobName
         
-        modelContext.insert(log)
-        
-        // Update filament remaining weight
-        targetFilament.remainingWeight = max(0, targetFilament.remainingWeight - amount)
-        
-        // Auto-archive if empty
-        if targetFilament.remainingWeight <= 0 {
-            targetFilament.isArchived = true
+        // Create UsageLog for each item
+        for item in usageItems {
+            guard let amount = Double(item.amountGrams), amount > 0 else { continue }
+            
+            let log = UsageLog(
+                amount: amount,
+                date: Date(),
+                note: jobName,
+                type: .print,
+                filament: item.filament
+            )
+            
+            modelContext.insert(log)
+            
+            // Update filament remaining weight
+            item.filament.remainingWeight = max(0, item.filament.remainingWeight - amount)
+            
+            // Auto-archive if empty
+            if item.filament.remainingWeight <= 0 {
+                item.filament.isArchived = true
+            }
         }
         
         dismiss()
+    }
+}
+
+// MARK: - Filament Usage Row
+struct FilamentUsageRow: View {
+    @Binding var item: FilamentUsageItem
+    let filaments: [Filament]
+    let onDelete: () -> Void
+    @State private var showFilamentPicker = false
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Filament Selection
+            HStack {
+                // Color indicator
+                Circle()
+                    .fill(Color(hex: item.filament.colorHex))
+                    .frame(width: 16, height: 16)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
+                    )
+                
+                // Filament info
+                Button(action: { showFilamentPicker = true }) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(item.filament.colorName) \(item.filament.material)")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                                .foregroundColor(.primary)
+                            
+                            Text(item.filament.brand.isEmpty ? "Unknown Brand" : item.filament.brand)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.down")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .sheet(isPresented: $showFilamentPicker) {
+                    FilamentSelectionView(
+                        filaments: filaments,
+                        selectedFilament: Binding(
+                            get: { item.filament },
+                            set: { newFilament in
+                                item.filament = newFilament
+                            }
+                        ),
+                        initialFilament: item.filament
+                    )
+                }
+                
+                // Delete button
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.subheadline)
+                        .foregroundColor(.red)
+                        .padding(8)
+                }
+            }
+            
+            // Amount input
+            HStack {
+                Text("Amount Used")
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                    .frame(width: 100, alignment: .leading)
+                
+                Spacer()
+                
+                HStack(spacing: 4) {
+                    TextField("0", text: $item.amountGrams)
+                        .textFieldStyle(UsageTextFieldStyle())
+                        .keyboardType(.decimalPad)
+                        .frame(width: 100)
+                    
+                    Text("g")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            // Preview: Remaining amount
+            if let amount = Double(item.amountGrams), amount > 0 {
+                let newRemaining = max(0, item.filament.remainingWeight - amount)
+                HStack {
+                    Text("Remaining:")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Text("\(Int(newRemaining))g")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(newRemaining < 50 ? .red : .primary)
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding(12)
+        .background(Color(.systemGray6).opacity(0.5))
+        .cornerRadius(12)
     }
 }
 
@@ -341,37 +419,25 @@ struct FormRow<Content: View>: View {
     }
 }
 
-// MARK: - Value Pill (read-only value styled like field)
-struct ValuePill: View {
-    let text: String
-    
-    var body: some View {
-        Text(text)
-            .font(.subheadline)
-            .foregroundColor(.primary)
-            .lineLimit(1)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(Color(.systemGray6))
-            .cornerRadius(8)
-    }
-}
-
 // MARK: - Usage Text Field Style
 struct UsageTextFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
     }
 }
 
 // MARK: - Filament Selection Sheet
 struct FilamentSelectionView: View {
     let filaments: [Filament]
-    @Binding var selectedFilament: Filament?
+    @Binding var selectedFilament: Filament
     let initialFilament: Filament
     @Environment(\.dismiss) private var dismiss
     
@@ -403,7 +469,7 @@ struct FilamentSelectionView: View {
                             
                             Spacer()
                             
-                            if filament.id == (selectedFilament?.id ?? initialFilament.id) {
+                            if filament.id == selectedFilament.id {
                                 Image(systemName: "checkmark")
                                     .foregroundColor(Color(hex: "#6B9B7A"))
                             }
