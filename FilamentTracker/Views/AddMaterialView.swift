@@ -31,6 +31,8 @@ struct AddMaterialView: View {
     @State private var showBrandPicker = false
     @State private var showCustomMaterialInput = false
     @State private var customMaterial: String = ""
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String = ""
     
     let filament: Filament?
     let materials = ["PLA", "PLA+", "ABS", "PETG", "TPU", "ASA", "PA", "PC", "PVA", "HIPS", "Wood", "Carbon", "Silk", "Matte"]
@@ -397,6 +399,11 @@ struct AddMaterialView: View {
                     analyzeImage(image)
                 }
             }
+            .alert("识别错误", isPresented: $showErrorAlert) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
         }
         .onAppear {
             if let filament = filament {
@@ -421,7 +428,8 @@ struct AddMaterialView: View {
         
         Task {
             do {
-                let recognizedData = try await MockImageRecognizer.shared.analyze(image)
+                // Use real API recognizer
+                let recognizedData = try await ImageRecognizer.shared.analyze(image)
                 
                 await MainActor.run {
                     withAnimation {
@@ -440,9 +448,17 @@ struct AddMaterialView: View {
                         isAnalyzing = false
                     }
                 }
+            } catch let error as ImageRecognizerError {
+                await MainActor.run {
+                    isAnalyzing = false
+                    errorMessage = error.localizedDescription ?? "识别失败，请重试"
+                    showErrorAlert = true
+                }
             } catch {
                 await MainActor.run {
                     isAnalyzing = false
+                    errorMessage = error.localizedDescription
+                    showErrorAlert = true
                 }
             }
         }

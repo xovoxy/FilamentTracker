@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  filament-recognition:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: filament-recognition-service
+    ports:
+      - "8000:8000"
+    environment:
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - CORS_ORIGINS=*
+      - MODEL_NAME=qwen-vl-plus
+      - MAX_TOKENS=2000
+      - TEMPERATURE=0.1
+      - MAX_IMAGE_SIZE_MB=10
+      - ALLOWED_IMAGE_TYPES=jpeg,jpg,png
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      # 可选：挂载日志目录
+      - ./logs:/app/logs
