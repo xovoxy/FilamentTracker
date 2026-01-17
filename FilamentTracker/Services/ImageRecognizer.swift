@@ -69,6 +69,8 @@ class ImageRecognizer {
             }
             
             // Convert API response to RecognizedFilamentData
+            // 将温度信息放入notes字段（通过minTemp字段传递，后续会在AddMaterialView中处理）
+            // 注意：这里使用minTemp字段临时存储温度信息字符串，实际会在AddMaterialView中放入notes
             return RecognizedFilamentData(
                 brand: recognizedData.brand,
                 material: recognizedData.material,
@@ -76,9 +78,9 @@ class ImageRecognizer {
                 colorHex: recognizedData.colorHex,
                 weight: recognizedData.weight,
                 diameter: recognizedData.diameter,
-                minTemp: nil,  // Not included in current API response
-                maxTemp: nil,   // Not included in current API response
-                bedTemp: nil   // Not included in current API response
+                minTemp: recognizedData.temperatureInfo,  // 临时使用minTemp传递温度信息
+                maxTemp: nil,
+                bedTemp: nil
             )
             
         } catch let error as ImageRecognizerError {
@@ -130,6 +132,7 @@ private struct RecognizedAPIData: Codable {
     let colorHex: String?
     let weight: String?
     let diameter: Double?
+    let temperatureInfo: String?  // 温度信息
 }
 
 private struct APIErrorResponse: Codable {

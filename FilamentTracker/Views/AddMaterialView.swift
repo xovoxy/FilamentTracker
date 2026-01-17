@@ -445,6 +445,16 @@ struct AddMaterialView: View {
                         }
                         if let diameter = recognizedData.diameter { self.diameter = diameter }
                         
+                        // 将温度信息添加到notes字段
+                        if let temperatureInfo = recognizedData.minTemp, !temperatureInfo.isEmpty {
+                            // 如果notes已有内容，追加温度信息；否则直接设置
+                            if !self.notes.isEmpty {
+                                self.notes = "\(self.notes)\n\n温度信息: \(temperatureInfo)"
+                            } else {
+                                self.notes = "温度信息: \(temperatureInfo)"
+                            }
+                        }
+                        
                         isAnalyzing = false
                     }
                 }

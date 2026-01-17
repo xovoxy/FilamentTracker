@@ -25,6 +25,12 @@ PROMPT_TEMPLATE = """请分析这张3D打印耗材标签图片，提取以下信
 4. colorHex (颜色十六进制): 根据图片中的实际颜色或颜色描述推断，格式为 "#RRGGBB"，如 "#333333", "#008080", "#FFD700"
 5. weight (重量): 以克(g)为单位，只返回数字字符串，如 "1000", "500", "250"
 6. diameter (直径): 1.75 或 2.85，返回数字类型
+7. temperatureInfo (温度信息): 提取图片中所有温度相关信息，包括：
+   - 喷嘴温度/打印温度 (Nozzle Temperature/Print Temperature): 如 "190-230°C" 或 "200-220°C"
+   - 热床温度 (Bed Temperature/Platform Temperature): 如 "50-60°C" 或 "55°C"
+   - 其他温度参数（如果有）
+   将所有温度信息整理成一段文字描述，格式如："喷嘴温度: 190-230°C, 热床温度: 50-60°C" 或 "打印温度: 200-220°C, 平台温度: 55°C"
+   如果没有温度信息，返回 null
 
 如果某个信息无法识别或图片中没有相关信息，请返回 null。
 
@@ -35,7 +41,8 @@ PROMPT_TEMPLATE = """请分析这张3D打印耗材标签图片，提取以下信
   "colorName": "颜色名称或null",
   "colorHex": "#颜色代码或null",
   "weight": "重量数字字符串或null",
-  "diameter": 1.75或2.85或null
+  "diameter": 1.75或2.85或null,
+  "temperatureInfo": "温度信息描述或null"
 }
 """
 
@@ -121,13 +128,19 @@ class ImageRecognizer:
         if color_hex and not color_hex.startswith("#"):
             color_hex = "#" + color_hex
         
+        # Normalize temperatureInfo (ensure it's a string)
+        temperature_info = data.get("temperatureInfo")
+        if temperature_info is not None and not isinstance(temperature_info, str):
+            temperature_info = str(temperature_info)
+        
         return RecognizedFilamentData(
             brand=data.get("brand"),
             material=data.get("material"),
             colorName=data.get("colorName"),
             colorHex=color_hex,
             weight=weight,
-            diameter=diameter
+            diameter=diameter,
+            temperatureInfo=temperature_info
         )
     
     async def recognize(self, image: Image.Image) -> Tuple[RecognizedFilamentData, float]:
@@ -216,8 +229,9 @@ class ImageRecognizer:
                 1 if recognized_data.colorHex else 0,
                 1 if recognized_data.weight else 0,
                 1 if recognized_data.diameter else 0,
+                1 if recognized_data.temperatureInfo else 0,
             ])
-            confidence = filled_fields / 6.0
+            confidence = filled_fields / 7.0
             
             return recognized_data, confidence
             

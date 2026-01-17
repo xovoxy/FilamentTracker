@@ -13,6 +13,7 @@ class RecognizedFilamentData(BaseModel):
     colorHex: Optional[str] = None
     weight: Optional[str] = None
     diameter: Optional[float] = None
+    temperatureInfo: Optional[str] = None  # 温度信息，将放入notes字段
 
 
 class RecognitionResponse(BaseModel):
