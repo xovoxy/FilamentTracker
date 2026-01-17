@@ -178,6 +178,7 @@
 "usage.available" = "可用:";
 "usage.select.spool" = "选择耗材";
 "usage.remaining.weight" = "剩余: %d g";
+"usage.no.spools.available" = "没有可用的耗材";
 
 /* Garden View */
 "garden.search.placeholder" = "按品牌或颜色搜索";

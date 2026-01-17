@@ -490,49 +490,128 @@ struct FilamentSelectionView: View {
     let initialFilament: Filament
     @Environment(\.dismiss) private var dismiss
     
+    @State private var selectedMaterialFilter: String? = nil
+    
+    // Get filtered filaments based on material filter
+    var filteredFilaments: [Filament] {
+        if let selectedMaterial = selectedMaterialFilter {
+            return filaments.filter { $0.material == selectedMaterial }
+        } else {
+            return filaments
+        }
+    }
+    
+    // Get all available material types
+    var availableMaterials: [String] {
+        let materials = Set(filaments.map { $0.material })
+        return Array(materials).sorted()
+    }
+    
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(filaments) { filament in
-                    Button {
-                        selectedFilament = filament
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Circle()
-                                .fill(Color(hex: filament.colorHex))
-                                .frame(width: 16, height: 16)
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
-                                )
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("\(filament.colorName) \(filament.material)")
-                                    .foregroundColor(.primary)
-                                
-                                HStack(spacing: 4) {
-                                    Text(filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : filament.brand)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+            ZStack {
+                // Background gradient matching home page
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color(hex: "#EBEBE0"), // Warm beige at top-left
+                        Color(hex: "#E0EBF0")  // Cool beige with light blue hint at bottom-right
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Material Filter Section
+                    if !availableMaterials.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    // All Materials option
+                                    FilterChip(
+                                        title: String(localized: "home.all", bundle: .main),
+                                        isSelected: selectedMaterialFilter == nil
+                                    ) {
+                                        selectedMaterialFilter = nil
+                                    }
                                     
-                                    Text("•")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    Text(String(format: String(localized: "usage.remaining.weight", bundle: .main), Int(filament.remainingWeight)))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                    // Material type options
+                                    ForEach(availableMaterials, id: \.self) { material in
+                                        FilterChip(
+                                            title: material,
+                                            isSelected: selectedMaterialFilter == material
+                                        ) {
+                                            selectedMaterialFilter = material
+                                        }
+                                    }
                                 }
-                            }
-                            
-                            Spacer()
-                            
-                            if filament.id == selectedFilament.id {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(Color(hex: "#6B9B7A"))
+                                .padding(.horizontal, 20)
                             }
                         }
+                        .padding(.vertical, 12)
+                        .background(Color(.systemBackground).opacity(0.9))
+                    }
+                    
+                    // Filament List
+                    if filteredFilaments.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "tray")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary)
+                            Text(String(localized: "usage.no.spools.available", bundle: .main))
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding()
+                    } else {
+                        List {
+                            ForEach(filteredFilaments) { filament in
+                                Button {
+                                    selectedFilament = filament
+                                    dismiss()
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Circle()
+                                            .fill(Color(hex: filament.colorHex))
+                                            .frame(width: 16, height: 16)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
+                                            )
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("\(filament.colorName) \(filament.material)")
+                                                .foregroundColor(.primary)
+                                            
+                                            HStack(spacing: 4) {
+                                                Text(filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : filament.brand)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                
+                                                Text("•")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                
+                                                Text(String(format: String(localized: "usage.remaining.weight", bundle: .main), Int(filament.remainingWeight)))
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        if filament.id == selectedFilament.id {
+                                            Image(systemName: "checkmark")
+                                                .foregroundColor(Color(hex: "#6B9B7A"))
+                                        }
+                                    }
+                                }
+                                .listRowBackground(Color(.systemBackground).opacity(0.9))
+                            }
+                        }
+                        .listStyle(.insetGrouped)
+                        .scrollContentBackground(.hidden)
                     }
                 }
             }

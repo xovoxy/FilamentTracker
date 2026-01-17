@@ -178,6 +178,7 @@
 "usage.available" = "Available:";
 "usage.select.spool" = "Select Spool";
 "usage.remaining.weight" = "Remaining: %d g";
+"usage.no.spools.available" = "No spools available";
 
 /* Garden View */
 "garden.search.placeholder" = "Search by brand or color";
