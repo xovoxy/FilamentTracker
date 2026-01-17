@@ -63,26 +63,26 @@ struct DetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationTitle("Material Detail")
+        .navigationTitle(String(localized: "detail.title", bundle: .main))
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button {
                         showEditSheet = true
                     } label: {
-                        Label("Edit", systemImage: "pencil")
+                        Label(String(localized: "edit", bundle: .main), systemImage: "pencil")
                     }
                     
                     Button {
                         showLogUsageSheet = true
                     } label: {
-                        Label("Log Usage", systemImage: "plus.circle")
+                        Label(String(localized: "detail.log.usage", bundle: .main), systemImage: "plus.circle")
                     }
                     
                     Button(role: .destructive) {
                         showArchiveAlert = true
                     } label: {
-                        Label("Archive", systemImage: "archivebox")
+                        Label(String(localized: "detail.archive", bundle: .main), systemImage: "archivebox")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -97,13 +97,14 @@ struct DetailView: View {
         .sheet(isPresented: $showLogUsageSheet) {
             TrackUsageView(filament: filament)
         }
-        .alert("Archive Filament", isPresented: $showArchiveAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Archive", role: .destructive) {
+        .alert(String(localized: "detail.archive.title", bundle: .main), isPresented: $showArchiveAlert) {
+            Button(String(localized: "cancel", bundle: .main), role: .cancel) { }
+            Button(String(localized: "detail.archive", bundle: .main), role: .destructive) {
                 archiveFilament()
             }
         } message: {
-            Text("Are you sure you want to archive this \(filament.brand.isEmpty ? "" : filament.brand + " ")\(filament.colorName) \(filament.material) spool? It will be hidden from the main view but can be restored later.")
+            let brandText = filament.brand.isEmpty ? "" : filament.brand + " "
+            Text(String(format: String(localized: "detail.archive.confirm", bundle: .main), brandText, filament.colorName, filament.material))
         }
     }
     
@@ -141,21 +142,21 @@ struct DetailView: View {
                     .fontWeight(.bold)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    InfoRow(label: "Material Type:", value: filament.material)
+                    InfoRow(label: String(localized: "detail.material.type", bundle: .main), value: filament.material)
                     
                     InfoRow(
-                        label: "Brand:",
-                        value: filament.brand.isEmpty ? "Unknown" : filament.brand
+                        label: String(localized: "detail.brand", bundle: .main),
+                        value: filament.brand.isEmpty ? String(localized: "card.unknown", bundle: .main) : filament.brand
                     )
                     
                     InfoRow(
-                        label: "Diameter:",
+                        label: String(localized: "detail.diameter", bundle: .main),
                         value: String(format: "%.2f mm", filament.diameter)
                     )
                     
                     if let notes = filament.notes, !notes.isEmpty {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Notes:")
+                            Text(String(localized: "detail.notes", bundle: .main))
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                             Text(notes)
@@ -182,7 +183,7 @@ struct DetailView: View {
             // Stock Card
             MetricCard(
                 icon: "cylinder.split.1x2",
-                title: "Stock",
+                title: String(localized: "detail.stock", bundle: .main),
                 value: String(format: "%.1f kg", filament.remainingWeight / 1000.0),
                 color: Color(hex: "#D4A574")
             )
@@ -190,7 +191,7 @@ struct DetailView: View {
             // Usage Rate Card
             MetricCard(
                 icon: "percent",
-                title: "Usage Rate",
+                title: String(localized: "detail.usage.rate", bundle: .main),
                 value: String(format: "%.0f%%", 100 - filament.remainingPercentage),
                 color: Color(hex: "#A0C49D")
             )
@@ -208,7 +209,7 @@ struct DetailView: View {
     // MARK: - Usage Trend Section
     private var usageTrendSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Usage Trend")
+            Text(String(localized: "detail.usage.over.time", bundle: .main))
                 .font(.headline)
                 .fontWeight(.semibold)
                 .padding(.horizontal, 4)
@@ -225,7 +226,7 @@ struct DetailView: View {
     // MARK: - Usage History Section
     private var usageHistorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Usage History")
+            Text(String(localized: "detail.history", bundle: .main))
                 .font(.headline)
                 .fontWeight(.semibold)
                 .padding(.horizontal, 4)

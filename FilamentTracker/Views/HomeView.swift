@@ -55,12 +55,16 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Filament> { !$0.isArchived }) private var filaments: [Filament]
     @Query private var usageLogs: [UsageLog]
+    @Query private var appSettings: [AppSettings]
+    
+    @ObservedObject private var languageManager = LanguageManager.shared
     
     @State private var showAddMaterial = false
     @State private var showLogUsage = false
     @State private var showMenu = false
     @State private var showArchiveManagement = false
     @State private var showProfile = false
+    @State private var showLanguagePicker = false
     @State private var selectedGroup: FilamentGroup?
     @State private var groupToEdit: FilamentGroup?
     @State private var groupToArchive: FilamentGroup?
@@ -214,7 +218,7 @@ struct HomeView: View {
                             .scaledToFit()
                             .frame(width: 32, height: 32)
                         
-                        Text("Filament Garden")
+                        Text("home.title", bundle: .main)
                             .font(.headline)
                             .fontWeight(.semibold)
                     }
@@ -224,9 +228,17 @@ struct HomeView: View {
                     // Settings Menu
                     Menu {
                         Button {
+                            showLanguagePicker = true
+                        } label: {
+                            Label(String(localized: "home.language", bundle: .main), systemImage: "globe")
+                        }
+                        
+                        Divider()
+                        
+                        Button {
                             showArchiveManagement = true
                         } label: {
-                            Label("Archive Management", systemImage: "archivebox")
+                            Label(String(localized: "home.archive.management", bundle: .main), systemImage: "archivebox")
                         }
                         
                         Divider()
@@ -234,7 +246,7 @@ struct HomeView: View {
                         Button {
                             showProfile = true
                         } label: {
-                            Label("Profile", systemImage: "person.circle")
+                            Label(String(localized: "home.profile", bundle: .main), systemImage: "person.circle")
                         }
                     } label: {
                         Image(systemName: "gearshape")
@@ -251,7 +263,7 @@ struct HomeView: View {
                     TrackUsageView(filament: firstFilament)
                 } else {
                     // Show empty state or create new filament
-                    Text("No filaments available")
+                    Text(String(localized: "home.no.filaments.available", bundle: .main))
                 }
             }
             .sheet(item: $selectedGroup) { group in
@@ -265,11 +277,14 @@ struct HomeView: View {
             .sheet(isPresented: $showArchiveManagement) {
                 ArchiveManagementView()
             }
-            .alert("Archive Filaments", isPresented: $showArchiveAlert) {
-                Button("Cancel", role: .cancel) {
+            .sheet(isPresented: $showLanguagePicker) {
+                LanguagePickerView(languageManager: languageManager)
+            }
+            .alert(String(localized: "detail.archive", bundle: .main), isPresented: $showArchiveAlert) {
+                Button(String(localized: "cancel", bundle: .main), role: .cancel) {
                     groupToArchive = nil
                 }
-                Button("Archive", role: .destructive) {
+                Button(String(localized: "detail.archive", bundle: .main), role: .destructive) {
                     if let group = groupToArchive {
                         archiveGroup(group)
                         groupToArchive = nil
@@ -277,7 +292,8 @@ struct HomeView: View {
                 }
             } message: {
                 if let group = groupToArchive {
-                    Text("Are you sure you want to archive \(group.totalCount) spool\(group.totalCount > 1 ? "s" : "") of \(group.colorName) \(group.material)? They will be hidden from the main view but can be restored later.")
+                    let spoolText = group.totalCount > 1 ? String(localized: "home.spools", bundle: .main) : String(localized: "home.spool", bundle: .main)
+                    Text(String(format: String(localized: "home.archive.confirm", bundle: .main), group.totalCount, spoolText, group.colorName, group.material))
                 }
             }
         }
@@ -295,7 +311,7 @@ struct HomeView: View {
                         .scaledToFit()
                         .frame(width: 64, height: 64)
                 },
-                title: "Total Stock",
+                title: String(localized: "home.total.stock", bundle: .main),
                 value: "\(totalStock)",
                 backgroundColor: Color(hex: "#7FD4B0")
             )
@@ -309,7 +325,7 @@ struct HomeView: View {
                         .scaledToFit()
                         .frame(width: 64, height: 64)
                 },
-                title: "Total Usage",
+                title: String(localized: "home.total.usage", bundle: .main),
                 value: formatUsage(totalUsage),
                 backgroundColor: Color(hex: "#8BC5D9")
             )
@@ -323,7 +339,7 @@ struct HomeView: View {
                         .scaledToFit()
                         .frame(width: 64, height: 64)
                 },
-                title: "Most Used",
+                title: String(localized: "home.most.used", bundle: .main),
                 valueView: {
                     if let mostUsed = mostUsedColor {
                         HStack(spacing: 8) {
@@ -338,7 +354,7 @@ struct HomeView: View {
                                 .font(.system(size: 18, weight: .bold))
                         }
                     } else {
-                        Text("N/A")
+                        Text(String(localized: "home.na", bundle: .main))
                             .font(.system(size: 18, weight: .bold))
                     }
                 },
@@ -350,7 +366,7 @@ struct HomeView: View {
     // MARK: - Current Inventory Section
     private var currentInventorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Current Inventory")
+            Text(String(localized: "home.current.inventory", bundle: .main))
                 .font(.headline)
                 .fontWeight(.semibold)
                 .padding(.horizontal, 4)
@@ -361,7 +377,7 @@ struct HomeView: View {
                     HStack(spacing: 8) {
                         // All Materials option
                         FilterChip(
-                            title: "All",
+                            title: String(localized: "home.all", bundle: .main),
                             isSelected: selectedMaterialFilter == nil
                         ) {
                             selectedMaterialFilter = nil
@@ -402,7 +418,7 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
     
     // MARK: - Action Buttons Section
@@ -415,7 +431,7 @@ struct HomeView: View {
                     Image(systemName: "plus")
                         .font(.title3)
                 },
-                title: "Add Material",
+                title: String(localized: "home.add.material", bundle: .main),
                 backgroundColor: Color(hex: "#7FD4B0")
             ) {
                 showAddMaterial = true
@@ -428,7 +444,7 @@ struct HomeView: View {
                     Image(systemName: "checklist")
                         .font(.title3)
                 },
-                title: "Log Usage",
+                title: String(localized: "home.log.usage", bundle: .main),
                 backgroundColor: Color(hex: "#8BC5D9")
             ) {
                 showLogUsage = true
@@ -605,7 +621,8 @@ struct GroupedInventoryRow: View {
             }
             
             HStack {
-                Text("\(group.totalCount) spool\(group.totalCount > 1 ? "s" : "")")
+                let spoolText = group.totalCount > 1 ? String(localized: "home.spools", bundle: .main) : String(localized: "home.spool", bundle: .main)
+                Text("\(group.totalCount) \(spoolText)")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -626,7 +643,7 @@ struct GroupedInventoryRow: View {
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             Button(role: .destructive, action: onArchive) {
-                Label("Archive", systemImage: "archivebox")
+                Label(String(localized: "detail.archive", bundle: .main), systemImage: "archivebox")
             }
         }
     }
@@ -674,12 +691,12 @@ struct ActionButton<Icon: View>: View {
 struct EmptyInventoryView: View {
     var body: some View {
         VStack(spacing: 12) {
-            Text("No materials yet")
+            Text(String(localized: "home.no.materials", bundle: .main))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .padding()
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, minHeight: 100)
         .padding()
         .background(Color(.systemBackground))
         .cornerRadius(12)
@@ -752,7 +769,7 @@ struct ColorMaterialStatsSheet: View {
                         // Usage Trend Chart
                         if !group.allLogs.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Usage Trend")
+                                Text(String(localized: "home.usage.trend", bundle: .main))
                                     .font(.headline)
                                     .padding(.horizontal)
                                 
@@ -768,7 +785,7 @@ struct ColorMaterialStatsSheet: View {
                         
                         // Filament List
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Spool Details")
+                            Text(String(localized: "home.spool.details", bundle: .main))
                                 .font(.headline)
                                 .padding(.horizontal)
                             
@@ -783,7 +800,7 @@ struct ColorMaterialStatsSheet: View {
                         // Usage History
                         if !group.allLogs.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Usage History")
+                                Text(String(localized: "home.usage.history", bundle: .main))
                                     .font(.headline)
                                     .padding(.horizontal)
                                 
@@ -909,7 +926,7 @@ struct GroupFilamentList: View {
                         )
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(filament.brand.isEmpty ? "Unknown Brand" : filament.brand)
+                        Text(filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : filament.brand)
                             .font(.subheadline)
                             .fontWeight(.medium)
                         
@@ -1012,7 +1029,7 @@ struct GroupUsageHistory: View {
             }
             
             if sortedLogs.count > 10 {
-                Text("+ \(sortedLogs.count - 10) more records")
+                Text(String(format: String(localized: "home.more.records", bundle: .main), sortedLogs.count - 10))
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.top, 4)
@@ -1066,7 +1083,8 @@ struct GroupEditView: View {
             
             List {
                 Section {
-                    Text("\(displayedFilaments.count) spool\(displayedFilaments.count > 1 ? "s" : "") in this group")
+                    let spoolText = displayedFilaments.count > 1 ? String(localized: "home.spools", bundle: .main) : String(localized: "home.spool", bundle: .main)
+                    Text(String(format: String(localized: "home.spools.in.group", bundle: .main), displayedFilaments.count, spoolText))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .listRowBackground(Color.clear)
@@ -1074,7 +1092,7 @@ struct GroupEditView: View {
                 
                 if displayedFilaments.isEmpty {
                     Section {
-                        Text("No spools remaining")
+                        Text(String(localized: "home.no.spools.remaining", bundle: .main))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .listRowBackground(Color.clear)
@@ -1092,15 +1110,15 @@ struct GroupEditView: View {
                                         filamentToArchive = filament
                                         showArchiveFilamentAlert = true
                                     } label: {
-                                        Label("Archive", systemImage: "archivebox")
+                                        Label(String(localized: "detail.archive", bundle: .main), systemImage: "archivebox")
                                     }
                                 }
                                 .listRowBackground(Color(.systemBackground).opacity(0.9))
                         }
                     } header: {
-                        Text("Spools")
+                        Text(String(localized: "home.spools", bundle: .main))
                     } footer: {
-                        Text("Swipe left on any spool to archive")
+                        Text(String(localized: "home.swipe.to.archive", bundle: .main))
                             .font(.caption)
                     }
                 }
@@ -1112,7 +1130,7 @@ struct GroupEditView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
+                Button(String(localized: "archive.done", bundle: .main)) {
                     dismiss()
                 }
             }
@@ -1123,11 +1141,11 @@ struct GroupEditView: View {
         .sheet(item: $filamentToEdit) { filament in
             AddMaterialView(filament: filament)
         }
-        .alert("Archive Spool", isPresented: $showArchiveFilamentAlert) {
-            Button("Cancel", role: .cancel) {
+        .alert(String(localized: "detail.archive", bundle: .main), isPresented: $showArchiveFilamentAlert) {
+            Button(String(localized: "cancel", bundle: .main), role: .cancel) {
                 filamentToArchive = nil
             }
-            Button("Archive", role: .destructive) {
+            Button(String(localized: "detail.archive", bundle: .main), role: .destructive) {
                 if let filament = filamentToArchive {
                     archiveFilament(filament)
                     filamentToArchive = nil
@@ -1135,7 +1153,8 @@ struct GroupEditView: View {
             }
         } message: {
             if let filament = filamentToArchive {
-                Text("Are you sure you want to archive this \(filament.brand.isEmpty ? "" : filament.brand + " ")\(filament.colorName) \(filament.material) spool? It will be hidden from the main view but can be restored later.")
+                let brandText = filament.brand.isEmpty ? "" : filament.brand + " "
+                Text(String(format: String(localized: "home.archive.spool.confirm", bundle: .main), brandText, filament.colorName, filament.material))
             }
         }
     }
@@ -1164,7 +1183,7 @@ struct GroupEditRow: View {
                 )
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(filament.brand.isEmpty ? "Unknown Brand" : filament.brand)
+                Text(filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : filament.brand)
                     .font(.subheadline)
                     .fontWeight(.medium)
                 

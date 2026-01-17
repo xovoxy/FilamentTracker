@@ -83,7 +83,7 @@ struct TrackUsageView: View {
                         )
                 }
             }
-            .navigationTitle("Log Usage")
+            .navigationTitle(String(localized: "usage.title", bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -94,7 +94,7 @@ struct TrackUsageView: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Clear") {
+                    Button(String(localized: "material.clear", bundle: .main)) {
                         clearForm()
                     }
                     .foregroundColor(.primary)
@@ -109,14 +109,14 @@ struct TrackUsageView: View {
     // MARK: - PRINT DETAILS Card
     private var printDetailsCard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("PRINT DETAILS")
+            Text(String(localized: "usage.print.details", bundle: .main))
                 .font(.headline)
                 .fontWeight(.semibold)
                 .foregroundColor(.primary)
             
             // Print Job Name
-            FormRow(label: "Print Job Name") {
-                TextField("Enter job name.", text: $printJobName)
+            FormRow(label: String(localized: "usage.print.job.name", bundle: .main)) {
+                TextField(String(localized: "usage.enter.job.name", bundle: .main), text: $printJobName)
                     .textFieldStyle(UsageTextFieldStyle())
             }
         }
@@ -130,7 +130,7 @@ struct TrackUsageView: View {
     private var usageDetailsCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("USAGE DETAILS")
+                Text(String(localized: "usage.usage.details", bundle: .main))
                     .font(.headline)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
@@ -142,7 +142,7 @@ struct TrackUsageView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "plus.circle.fill")
                             .font(.subheadline)
-                        Text("Add Spool")
+                        Text(String(localized: "usage.add.spool", bundle: .main))
                             .font(.subheadline)
                             .fontWeight(.medium)
                     }
@@ -156,7 +156,7 @@ struct TrackUsageView: View {
                     Image(systemName: "tray")
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
-                    Text("No spools added")
+                    Text(String(localized: "usage.no.spools.added", bundle: .main))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -193,7 +193,7 @@ struct TrackUsageView: View {
     // MARK: - Bottom Buttons
     private var bottomButtons: some View {
         Button(action: { saveUsage() }) {
-            Text("Log Usage")
+            Text(String(localized: "usage.title", bundle: .main))
                 .font(.subheadline)
                 .fontWeight(.medium)
                 .foregroundColor(.white)
@@ -310,7 +310,7 @@ struct FilamentUsageRow: View {
                                 .fontWeight(.medium)
                                 .foregroundColor(.primary)
                             
-                            Text(item.filament.brand.isEmpty ? "Unknown Brand" : item.filament.brand)
+                            Text(item.filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : item.filament.brand)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -354,7 +354,7 @@ struct FilamentUsageRow: View {
             
             // Amount input
             HStack {
-                Text("Amount Used")
+                Text(String(localized: "usage.amount.used", bundle: .main))
                     .font(.subheadline)
                     .foregroundColor(.primary)
                     .frame(width: 100, alignment: .leading)
@@ -397,7 +397,7 @@ struct FilamentUsageRow: View {
                 
                 VStack(spacing: 4) {
                     HStack {
-                        Text("Remaining:")
+                        Text(String(localized: "usage.remaining", bundle: .main))
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -414,7 +414,7 @@ struct FilamentUsageRow: View {
                             Image(systemName: "info.circle.fill")
                                 .font(.caption2)
                                 .foregroundColor(.blue)
-                            Text("Automatically adjusted to remaining: \(Int(item.filament.remainingWeight))g")
+                            Text(String(format: String(localized: "usage.auto.adjusted", bundle: .main), Int(item.filament.remainingWeight)))
                                 .font(.caption2)
                                 .foregroundColor(.blue)
                         }
@@ -425,7 +425,7 @@ struct FilamentUsageRow: View {
             
             // Show available amount hint
             HStack {
-                Text("Available:")
+                Text(String(localized: "usage.available", bundle: .main))
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -512,7 +512,7 @@ struct FilamentSelectionView: View {
                                     .foregroundColor(.primary)
                                 
                                 HStack(spacing: 4) {
-                                    Text(filament.brand.isEmpty ? "Unknown Brand" : filament.brand)
+                                    Text(filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : filament.brand)
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     
@@ -520,7 +520,7 @@ struct FilamentSelectionView: View {
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                     
-                                    Text("剩余: \(Int(filament.remainingWeight))g")
+                                    Text(String(format: String(localized: "usage.remaining.weight", bundle: .main), Int(filament.remainingWeight)))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -536,11 +536,11 @@ struct FilamentSelectionView: View {
                     }
                 }
             }
-            .navigationTitle("Select Spool")
+            .navigationTitle(String(localized: "usage.select.spool", bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(String(localized: "cancel", bundle: .main)) {
                         dismiss()
                     }
                 }

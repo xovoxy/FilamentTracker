@@ -106,11 +106,11 @@ struct AddMaterialView: View {
                                         .foregroundColor(.white)
                                     
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Auto-fill from Photo")
+                                        Text(String(localized: "material.auto.fill", bundle: .main))
                                             .font(.headline)
                                             .foregroundColor(.white)
                                         
-                                        Text("Take a photo of the spool label")
+                                        Text(String(localized: "material.auto.fill.subtitle", bundle: .main))
                                             .font(.caption)
                                             .foregroundColor(.white.opacity(0.9))
                                     }
@@ -135,20 +135,20 @@ struct AddMaterialView: View {
                                 )
                                 .cornerRadius(12)
                             }
-                            .confirmationDialog("Choose Image Source", isPresented: $showActionSheet) {
-                                Button("Camera") {
+                            .confirmationDialog(String(localized: "material.choose.image.source", bundle: .main), isPresented: $showActionSheet) {
+                                Button(String(localized: "material.camera", bundle: .main)) {
                                     sourceType = .camera
                                     showImagePicker = true
                                 }
-                                Button("Photo Library") {
+                                Button(String(localized: "material.photo.library", bundle: .main)) {
                                     sourceType = .photoLibrary
                                     showImagePicker = true
                                 }
-                                Button("Cancel", role: .cancel) {}
+                                Button(String(localized: "cancel", bundle: .main), role: .cancel) {}
                             }
                             
                             // Material Type Section
-                            FormSection(title: "Material Type") {
+                            FormSection(title: String(localized: "material.type", bundle: .main)) {
                                 VStack(alignment: .leading, spacing: 12) {
                                     ScrollView(.horizontal, showsIndicators: false) {
                                         HStack(spacing: 8) {
@@ -182,7 +182,9 @@ struct AddMaterialView: View {
                                     // Custom material input - only show when explicitly triggered
                                     if showCustomMaterialInput && filament == nil {
                                         HStack {
-                                            TextField("Enter custom type", text: $customMaterial)
+                                            TextField(String(localized: "material.enter.custom.type", bundle: .main), text: $customMaterial)
+                                                .textInputAutocapitalization(.never)
+                                                .autocorrectionDisabled(false)
                                                 .padding()
                                                 .background(Color(.secondarySystemBackground))
                                                 .cornerRadius(12)
@@ -193,7 +195,7 @@ struct AddMaterialView: View {
                                                     showCustomMaterialInput = false
                                                 }
                                             }) {
-                                                Text("OK")
+                                                Text(String(localized: "material.ok", bundle: .main))
                                                     .font(.subheadline)
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.white)
@@ -209,18 +211,18 @@ struct AddMaterialView: View {
                             }
                             
                             // Color Name Section
-                            FormSection(title: "Color Name") {
+                            FormSection(title: String(localized: "material.color.name", bundle: .main)) {
                                 SimpleTextField(
-                                    placeholder: "Enter name",
+                                    placeholder: String(localized: "material.enter.name", bundle: .main),
                                     text: $colorName
                                 )
                             }
                             
                             // Brand Section
-                            FormSection(title: "Brand") {
+                            FormSection(title: String(localized: "material.brand", bundle: .main)) {
                                 Button(action: { showBrandPicker = true }) {
                                     HStack {
-                                        Text(brand.isEmpty ? "Select brand" : brand)
+                                        Text(brand.isEmpty ? String(localized: "material.select.brand", bundle: .main) : brand)
                                             .foregroundColor(brand.isEmpty ? .secondary : .primary)
                                         
                                         Spacer()
@@ -246,7 +248,7 @@ struct AddMaterialView: View {
                             }
                             
                             // Color Section
-                            FormSection(title: "Color") {
+                            FormSection(title: String(localized: "material.color", bundle: .main)) {
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     HStack(spacing: 12) {
                                         // Custom Color Picker
@@ -292,13 +294,13 @@ struct AddMaterialView: View {
                             }
                             
                             // Diameter Section
-                            FormSection(title: "Diameter") {
+                            FormSection(title: String(localized: "material.diameter", bundle: .main)) {
                                 DiameterPicker(selectedDiameter: $diameter)
                             }
                             
                             // Stock Amount & Price Section
                             HStack(spacing: 12) {
-                                FormSection(title: "Stock Amount") {
+                                FormSection(title: String(localized: "material.stock.amount", bundle: .main)) {
                                     SuffixTextField(
                                         placeholder: "",
                                         text: $stockAmount,
@@ -307,7 +309,7 @@ struct AddMaterialView: View {
                                     )
                                 }
                                 
-                                FormSection(title: "Price") {
+                                FormSection(title: String(localized: "material.price", bundle: .main)) {
                                     SuffixTextField(
                                         placeholder: "",
                                         text: $price,
@@ -318,7 +320,7 @@ struct AddMaterialView: View {
                             }
                             
                             // Notes Section
-                            FormSection(title: "Notes", subtitle: "(optional)") {
+                            FormSection(title: String(localized: "material.notes", bundle: .main), subtitle: String(localized: "material.optional", bundle: .main)) {
                                 NotesTextField(
                                     placeholder: "",
                                     text: $notes
@@ -345,7 +347,7 @@ struct AddMaterialView: View {
                     // Bottom Button
                     VStack(spacing: 12) {
                         Button(action: { saveFilament() }) {
-                            Text(filament == nil ? "Add Material" : "Update Material")
+                            Text(filament == nil ? String(localized: "material.add", bundle: .main) : String(localized: "material.update", bundle: .main))
                                 .font(.headline)
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -364,7 +366,7 @@ struct AddMaterialView: View {
                     )
                 }
             }
-            .navigationTitle(filament == nil ? "Add New Material" : "Edit Material")
+            .navigationTitle(filament == nil ? String(localized: "material.add.new", bundle: .main) : String(localized: "material.edit.title", bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -376,7 +378,7 @@ struct AddMaterialView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if filament == nil {
-                        Button("Clear") {
+                        Button(String(localized: "material.clear", bundle: .main)) {
                             clearForm()
                         }
                         .foregroundColor(.secondary)
@@ -559,6 +561,8 @@ struct SimpleTextField: View {
     
     var body: some View {
         TextField(placeholder, text: $text)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled(false)
             .padding()
             .background(Color(.systemBackground))
             .cornerRadius(12)
@@ -722,6 +726,8 @@ struct CustomTextField: View {
                 }
                 TextField("", text: $text)
                     .keyboardType(keyboardType)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled(false)
             }
         }
         .padding()
@@ -832,7 +838,7 @@ struct BrandSelectionView: View {
                                         .foregroundColor(.gray)
                                 }
                                 
-                                Text("Custom brand...")
+                                Text(String(localized: "material.custom.brand", bundle: .main))
                                     .font(.body)
                                     .foregroundColor(.secondary)
                                 
@@ -846,12 +852,14 @@ struct BrandSelectionView: View {
                         // Custom Input Field
                         if isCustomMode {
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Enter custom brand")
+                                Text(String(localized: "material.enter.custom.brand", bundle: .main))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 
                                 HStack {
-                                    TextField("Brand name", text: $customBrand)
+                                    TextField(String(localized: "material.brand.name", bundle: .main), text: $customBrand)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled(false)
                                         .padding()
                                         .background(Color(.secondarySystemBackground))
                                         .cornerRadius(12)
@@ -862,7 +870,7 @@ struct BrandSelectionView: View {
                                             dismiss()
                                         }
                                     }) {
-                                        Text("Add")
+                                        Text(String(localized: "add", bundle: .main))
                                             .font(.headline)
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 20)
@@ -881,11 +889,11 @@ struct BrandSelectionView: View {
                     .padding()
                 }
             }
-            .navigationTitle("Select Brand")
+            .navigationTitle(String(localized: "material.select.brand.title", bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(String(localized: "cancel", bundle: .main)) {
                         dismiss()
                     }
                 }

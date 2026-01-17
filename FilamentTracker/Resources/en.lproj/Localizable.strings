@@ -68,3 +68,115 @@
 "usage.previous" = "Previous Remaining";
 "usage.deduct" = "Amount to Deduct";
 "usage.new.remaining" = "New Remaining";
+
+/* Home View */
+"home.title" = "Filament Garden";
+"home.total.stock" = "Total Stock";
+"home.total.usage" = "Total Usage";
+"home.most.used" = "Most Used";
+"home.current.inventory" = "Current Inventory";
+"home.no.materials" = "No materials yet";
+"home.add.material" = "Add Material";
+"home.log.usage" = "Log Usage";
+"home.archive.management" = "Archive Management";
+"home.profile" = "Profile";
+"home.language" = "Language";
+"home.language.english" = "English";
+"home.language.chinese" = "简体中文";
+"home.language.system" = "System";
+"home.language.restart.title" = "Restart Required";
+"home.language.restart.message" = "The app needs to restart to apply the language change.";
+"home.language.restart.confirm" = "Restart";
+"home.all" = "All";
+"home.na" = "N/A";
+"home.no.filaments.available" = "No filaments available";
+"home.archive.confirm" = "Are you sure you want to archive %d %@ of %@ %@? They will be hidden from the main view but can be restored later.";
+"home.archive.spool.confirm" = "Are you sure you want to archive this %@%@ %@ spool? It will be hidden from the main view but can be restored later.";
+"home.spool" = "spool";
+"home.spools" = "spools";
+"home.usage.trend" = "Usage Trend";
+"home.spool.details" = "Spool Details";
+"home.usage.history" = "Usage History";
+"home.spools.in.group" = "%d %@ in this group";
+"home.no.spools.remaining" = "No spools remaining";
+"home.swipe.to.archive" = "Swipe left on any spool to archive";
+"home.unknown.brand" = "Unknown Brand";
+"home.more.records" = "+ %d more records";
+
+/* Add Material View */
+"material.auto.fill" = "Auto-fill from Photo";
+"material.auto.fill.subtitle" = "Take a photo of the spool label";
+"material.choose.image.source" = "Choose Image Source";
+"material.camera" = "Camera";
+"material.photo.library" = "Photo Library";
+"material.enter.custom.type" = "Enter custom type";
+"material.ok" = "OK";
+"material.color.name" = "Color Name";
+"material.enter.name" = "Enter name";
+"material.brand" = "Brand";
+"material.select.brand" = "Select brand";
+"material.color" = "Color";
+"material.stock.amount" = "Stock Amount";
+"material.price" = "Price";
+"material.notes" = "Notes";
+"material.optional" = "(optional)";
+"material.add" = "Add Material";
+"material.update" = "Update Material";
+"material.add.new" = "Add New Material";
+"material.clear" = "Clear";
+"material.select.brand.title" = "Select Brand";
+"material.custom.brand" = "Custom brand...";
+"material.enter.custom.brand" = "Enter custom brand";
+"material.brand.name" = "Brand name";
+
+/* Archive Management */
+"archive.title" = "Archive Management";
+"archive.done" = "Done";
+"archive.restore.title" = "Restore Filament";
+"archive.restore" = "Restore";
+"archive.restore.confirm" = "Restore %@%@ %@ spool?";
+"archive.delete.title" = "Delete Filament";
+"archive.delete.confirm" = "Are you sure you want to permanently delete this %@%@ %@ spool? This action cannot be undone.";
+"archive.archived.spools" = "Archived Spools";
+"archive.material.types" = "Material Types";
+"archive.empty.title" = "No Archived Filaments";
+"archive.empty.message" = "Archived filaments will appear here";
+"archive.remaining" = "%d g remaining";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.data.management" = "Data Management";
+"settings.data.management.description" = "Manage archived filaments and restore or delete them";
+
+/* Detail View Archive */
+"detail.archive.title" = "Archive Filament";
+"detail.archive.confirm" = "Are you sure you want to archive this %@%@ %@ spool? It will be hidden from the main view but can be restored later.";
+
+/* Detail View */
+"detail.title" = "Material Detail";
+"detail.notes" = "Notes:";
+"detail.material.type" = "Material Type:";
+"detail.brand" = "Brand:";
+"detail.diameter" = "Diameter:";
+"detail.stock" = "Stock";
+"detail.usage.rate" = "Usage Rate";
+
+/* Track Usage View */
+"usage.print.details" = "PRINT DETAILS";
+"usage.usage.details" = "USAGE DETAILS";
+"usage.print.job.name" = "Print Job Name";
+"usage.enter.job.name" = "Enter job name.";
+"usage.add.spool" = "Add Spool";
+"usage.no.spools.added" = "No spools added";
+"usage.amount.used" = "Amount Used";
+"usage.remaining" = "Remaining:";
+"usage.auto.adjusted" = "Automatically adjusted to remaining: %d g";
+"usage.available" = "Available:";
+"usage.select.spool" = "Select Spool";
+"usage.remaining.weight" = "Remaining: %d g";
+
+/* Garden View */
+"garden.search.placeholder" = "Search by brand or color";
+
+/* Filament Card */
+"card.unknown" = "Unknown";

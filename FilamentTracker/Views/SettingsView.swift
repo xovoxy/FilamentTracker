@@ -20,7 +20,7 @@ struct SettingsView: View {
                         showArchiveManagement = true
                     } label: {
                         HStack {
-                            Label("Archive Management", systemImage: "archivebox")
+                            Label(String(localized: "archive.title", bundle: .main), systemImage: "archivebox")
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.caption)
@@ -28,16 +28,16 @@ struct SettingsView: View {
                         }
                     }
                 } header: {
-                    Text("Data Management")
+                    Text(String(localized: "settings.data.management", bundle: .main))
                 } footer: {
-                    Text("Manage archived filaments and restore or delete them")
+                    Text(String(localized: "settings.data.management.description", bundle: .main))
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle(String(localized: "settings.title", bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(String(localized: "archive.done", bundle: .main)) {
                         dismiss()
                     }
                 }

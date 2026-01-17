@@ -25,7 +25,7 @@ struct FilamentCard: View {
             
             // Brand and material
             VStack(spacing: 4) {
-                Text(filament.brand.isEmpty ? "Unknown" : filament.brand)
+                Text(filament.brand.isEmpty ? String(localized: "card.unknown", bundle: .main) : filament.brand)
                     .font(.headline)
                     .lineLimit(1)
                 
@@ -68,7 +68,7 @@ struct FilamentCard: View {
             Button {
                 onLogUsage?()
             } label: {
-                Text("Log Usage")
+                Text(String(localized: "detail.log.usage", bundle: .main))
                     .font(.caption)
                     .fontWeight(.medium)
                     .foregroundColor(.white)

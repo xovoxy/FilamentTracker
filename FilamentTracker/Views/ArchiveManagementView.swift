@@ -89,20 +89,20 @@ struct ArchiveManagementView: View {
                     }
                 }
             }
-            .navigationTitle("Archive Management")
+            .navigationTitle(String(localized: "archive.title", bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button(String(localized: "archive.done", bundle: .main)) {
                         dismiss()
                     }
                 }
             }
-            .alert("Restore Filament", isPresented: $showRestoreAlert) {
-                Button("Cancel", role: .cancel) {
+            .alert(String(localized: "archive.restore.title", bundle: .main), isPresented: $showRestoreAlert) {
+                Button(String(localized: "cancel", bundle: .main), role: .cancel) {
                     filamentToRestore = nil
                 }
-                Button("Restore") {
+                Button(String(localized: "archive.restore", bundle: .main)) {
                     if let filament = filamentToRestore {
                         restoreFilament(filament)
                         filamentToRestore = nil
@@ -110,14 +110,15 @@ struct ArchiveManagementView: View {
                 }
             } message: {
                 if let filament = filamentToRestore {
-                    Text("Restore \(filament.brand.isEmpty ? "" : filament.brand + " ")\(filament.colorName) \(filament.material) spool?")
+                    let brandText = filament.brand.isEmpty ? "" : filament.brand + " "
+                    Text(String(format: String(localized: "archive.restore.confirm", bundle: .main), brandText, filament.colorName, filament.material))
                 }
             }
-            .alert("Delete Filament", isPresented: $showDeleteAlert) {
-                Button("Cancel", role: .cancel) {
+            .alert(String(localized: "archive.delete.title", bundle: .main), isPresented: $showDeleteAlert) {
+                Button(String(localized: "cancel", bundle: .main), role: .cancel) {
                     filamentToDelete = nil
                 }
-                Button("Delete", role: .destructive) {
+                Button(String(localized: "delete", bundle: .main), role: .destructive) {
                     if let filament = filamentToDelete {
                         deleteFilament(filament)
                         filamentToDelete = nil
@@ -125,7 +126,8 @@ struct ArchiveManagementView: View {
                 }
             } message: {
                 if let filament = filamentToDelete {
-                    Text("Are you sure you want to permanently delete this \(filament.brand.isEmpty ? "" : filament.brand + " ")\(filament.colorName) \(filament.material) spool? This action cannot be undone.")
+                    let brandText = filament.brand.isEmpty ? "" : filament.brand + " "
+                    Text(String(format: String(localized: "archive.delete.confirm", bundle: .main), brandText, filament.colorName, filament.material))
                 }
             }
         }
@@ -138,7 +140,7 @@ struct ArchiveManagementView: View {
                 Text("\(archivedFilaments.count)")
                     .font(.title)
                     .fontWeight(.bold)
-                Text("Archived Spools")
+                Text(String(localized: "archive.archived.spools", bundle: .main))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -150,7 +152,7 @@ struct ArchiveManagementView: View {
                     Text("\(availableMaterials.count)")
                         .font(.title)
                         .fontWeight(.bold)
-                    Text("Material Types")
+                    Text(String(localized: "archive.material.types", bundle: .main))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -166,7 +168,7 @@ struct ArchiveManagementView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 FilterChip(
-                    title: "All",
+                    title: String(localized: "home.all", bundle: .main),
                     isSelected: selectedMaterialFilter == nil
                 ) {
                     selectedMaterialFilter = nil
@@ -191,11 +193,11 @@ struct ArchiveManagementView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
             
-            Text("No Archived Filaments")
+            Text(String(localized: "archive.empty.title", bundle: .main))
                 .font(.headline)
                 .foregroundColor(.primary)
             
-            Text("Archived filaments will appear here")
+            Text(String(localized: "archive.empty.message", bundle: .main))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -250,7 +252,7 @@ struct ArchivedFilamentRow: View {
                             )
                     }
                     
-                    Text("Restore")
+                    Text(String(localized: "archive.restore", bundle: .main))
                         .font(.caption)
                         .foregroundColor(.primary)
                 }
@@ -277,7 +279,7 @@ struct ArchivedFilamentRow: View {
                             )
                     }
                     
-                    Text("Delete")
+                    Text(String(localized: "delete", bundle: .main))
                         .font(.caption)
                         .foregroundColor(.primary)
                 }
@@ -311,7 +313,7 @@ struct ArchivedFilamentRow: View {
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        Text("\(Int(filament.remainingWeight))g remaining")
+                        Text(String(format: String(localized: "archive.remaining", bundle: .main), Int(filament.remainingWeight)))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -339,12 +341,12 @@ struct ArchivedFilamentRow: View {
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             // Delete button (rightmost)
             Button(role: .destructive, action: onDelete) {
-                Label("Delete", systemImage: "trash")
+                Label(String(localized: "delete", bundle: .main), systemImage: "trash")
             }
             
             // Restore button (left of delete)
             Button(action: onRestore) {
-                Label("Restore", systemImage: "arrow.uturn.backward")
+                Label(String(localized: "archive.restore", bundle: .main), systemImage: "arrow.uturn.backward")
             }
             .tint(Color(hex: "#7FD4B0"))
         }

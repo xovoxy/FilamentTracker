@@ -45,7 +45,7 @@ struct GardenView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             FilterChip(
-                                title: "All",
+                                title: String(localized: "home.all", bundle: .main),
                                 isSelected: selectedMaterial == nil
                             ) {
                                 selectedMaterial = nil
@@ -88,7 +88,7 @@ struct GardenView: View {
                     }
                 }
             }
-            .navigationTitle("Organize Your Print Materials")
+            .navigationTitle(String(localized: "garden.title", bundle: .main))
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -117,7 +117,7 @@ struct SearchBar: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.gray)
             
-            TextField("Search by brand or color", text: $text)
+            TextField(String(localized: "garden.search.placeholder", bundle: .main), text: $text)
                 .textFieldStyle(PlainTextFieldStyle())
             
             if !text.isEmpty {
@@ -167,11 +167,11 @@ struct EmptyStateView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("No Filaments Yet")
+            Text(String(localized: "garden.empty.state", bundle: .main))
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Add your first filament spool to get started")
+            Text(String(localized: "garden.empty.message", bundle: .main))
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

@@ -23,7 +23,7 @@ struct AnalyticsView: View {
                         HStack {
                             Image(systemName: "leaf.fill")
                                 .foregroundColor(.teal)
-                            Text("Track Usage")
+                            Text(String(localized: "analytics.track.usage", bundle: .main))
                                 .font(.headline)
                             Spacer()
                             CircularProgressView(percentage: overallUsagePercentage)
@@ -43,7 +43,7 @@ struct AnalyticsView: View {
                         HStack {
                             Image(systemName: "magnifyingglass")
                                 .foregroundColor(.teal)
-                            Text("Analytics")
+                            Text(String(localized: "analytics.title", bundle: .main))
                                 .font(.headline)
                         }
                         .padding(.horizontal)
@@ -56,7 +56,7 @@ struct AnalyticsView: View {
                         }
                         .padding()
                         
-                        Text("Summary analyzed material type: PLA, ABS, PETG management")
+                        Text(String(localized: "analytics.summary", bundle: .main))
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .padding(.horizontal)
@@ -68,7 +68,7 @@ struct AnalyticsView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Analytics")
+            .navigationTitle(String(localized: "analytics.title", bundle: .main))
             .background(Color(.systemGroupedBackground))
         }
     }

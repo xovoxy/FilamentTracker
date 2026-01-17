@@ -19,7 +19,7 @@ struct RemindersView: View {
                     HStack {
                         Image(systemName: "bell.fill")
                             .foregroundColor(.teal)
-                        Text("Reminders")
+                        Text(String(localized: "reminders.title", bundle: .main))
                             .font(.headline)
                         Spacer()
                     }
@@ -35,7 +35,7 @@ struct RemindersView: View {
                     Button {
                         // Manage alerts action
                     } label: {
-                        Text("Manage Alerts")
+                        Text(String(localized: "reminders.manage.alerts", bundle: .main))
                             .font(.subheadline)
                             .foregroundColor(.teal)
                             .padding(.top, 8)
@@ -43,7 +43,7 @@ struct RemindersView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Reminders")
+            .navigationTitle(String(localized: "reminders.title", bundle: .main))
             .background(Color(.systemGroupedBackground))
         }
     }
@@ -57,8 +57,8 @@ struct RemindersView: View {
             if let daysUntilEmpty = daysUntilEmpty(for: filament) {
                 result.append(Reminder(
                     id: UUID(),
-                    title: "Order More \(filament.material)",
-                    subtitle: daysUntilEmpty == 0 ? "Today" : "\(daysUntilEmpty) days",
+                    title: String(format: String(localized: "reminders.order.more", bundle: .main), filament.material),
+                    subtitle: daysUntilEmpty == 0 ? String(localized: "reminders.today", bundle: .main) : String(format: String(localized: "reminders.days", bundle: .main), daysUntilEmpty),
                     type: .lowStock,
                     color: .blue
                 ))
@@ -68,8 +68,8 @@ struct RemindersView: View {
         // Check for drying needed (placeholder - would need humidity tracking)
         result.append(Reminder(
             id: UUID(),
-            title: "Filament Drying Needed",
-            subtitle: "Today",
+            title: String(localized: "reminders.drying.needed", bundle: .main),
+            subtitle: String(localized: "reminders.today", bundle: .main),
             type: .drying,
             color: .orange
         ))
@@ -77,8 +77,8 @@ struct RemindersView: View {
         // Check print bed
         result.append(Reminder(
             id: UUID(),
-            title: "Check Print Bed",
-            subtitle: "Tomorrow",
+            title: String(localized: "reminders.check.bed", bundle: .main),
+            subtitle: String(localized: "reminders.tomorrow", bundle: .main),
             type: .maintenance,
             color: Color(hex: "#F5DEB3")
         ))

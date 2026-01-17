@@ -1,7 +1,7 @@
 /* Filament Tracker - 简体中文本地化 */
 
 /* General */
-"app.name" = "耗材追踪器";
+"app.name" = "3D耗材仓库";
 "cancel" = "取消";
 "save" = "保存";
 "edit" = "编辑";
@@ -10,18 +10,18 @@
 "search" = "搜索";
 
 /* Garden View */
-"garden.title" = "整理您的打印材料";
-"garden.add.material" = "添加材料";
+"garden.title" = "整理您的打印耗材";
+"garden.add.material" = "添加耗材";
 "garden.empty.state" = "还没有耗材";
 "garden.empty.message" = "添加您的第一个耗材卷轴开始使用";
 
 /* Add Material */
-"material.add.title" = "添加材料";
-"material.edit.title" = "编辑材料";
-"material.name" = "材料名称";
+"material.add.title" = "添加耗材";
+"material.edit.title" = "编辑耗材";
+"material.name" = "耗材名称";
 "material.weight" = "重量 (g)";
 "material.cost" = "成本";
-"material.type" = "材料类型";
+"material.type" = "耗材类型";
 "material.color" = "颜色名称";
 "material.diameter" = "直径";
 "material.empty.spool" = "空卷轴重量 (g)";
@@ -33,7 +33,7 @@
 /* Analytics */
 "analytics.title" = "分析";
 "analytics.track.usage" = "使用跟踪";
-"analytics.summary" = "汇总分析材料类型：PLA、ABS、PETG 管理";
+"analytics.summary" = "汇总分析耗材类型：PLA、ABS、PETG 管理";
 
 /* Reminders */
 "reminders.title" = "提醒";
@@ -68,3 +68,115 @@
 "usage.previous" = "之前剩余";
 "usage.deduct" = "扣除量";
 "usage.new.remaining" = "新的剩余";
+
+/* Home View */
+"home.title" = "3D耗材仓库";
+"home.total.stock" = "总库存";
+"home.total.usage" = "总使用量";
+"home.most.used" = "最常用";
+"home.current.inventory" = "当前库存";
+"home.no.materials" = "还没有耗材";
+"home.add.material" = "添加耗材";
+"home.log.usage" = "记录使用";
+"home.archive.management" = "归档管理";
+"home.profile" = "个人资料";
+"home.language" = "语言";
+"home.language.english" = "English";
+"home.language.chinese" = "简体中文";
+"home.language.system" = "跟随系统";
+"home.language.restart.title" = "需要重启";
+"home.language.restart.message" = "应用需要重启以应用语言更改。";
+"home.language.restart.confirm" = "重启";
+"home.all" = "全部";
+"home.na" = "无";
+"home.no.filaments.available" = "没有可用的耗材";
+"home.archive.confirm" = "您确定要归档 %d 个 %@ %@ 的耗材吗？它们将从主视图隐藏，但稍后可以手动恢复。";
+"home.archive.spool.confirm" = "您确定要归档这个 %@%@ %@ 的耗材吗？它将从主视图隐藏，但稍后可以手动恢复。";
+"home.spool" = "耗材";
+"home.spools" = "耗材";
+"home.usage.trend" = "使用趋势";
+"home.spool.details" = "耗材详情";
+"home.usage.history" = "使用历史";
+"home.spools.in.group" = "此组中有 %d 个耗材";
+"home.no.spools.remaining" = "没有剩余的耗材";
+"home.swipe.to.archive" = "向左滑动任何耗材以归档";
+"home.unknown.brand" = "未知品牌";
+"home.more.records" = "+ %d 条更多记录";
+
+/* Add Material View */
+"material.auto.fill" = "识别图片并自动填充";
+"material.auto.fill.subtitle" = "拍摄耗材标签的照片";
+"material.choose.image.source" = "选择图片来源";
+"material.camera" = "相机";
+"material.photo.library" = "照片库";
+"material.enter.custom.type" = "输入自定义类型";
+"material.ok" = "确定";
+"material.color.name" = "颜色名称";
+"material.enter.name" = "输入名称";
+"material.brand" = "品牌";
+"material.select.brand" = "选择品牌";
+"material.color" = "颜色";
+"material.stock.amount" = "重量";
+"material.price" = "价格";
+"material.notes" = "备注";
+"material.optional" = "（可选）";
+"material.add" = "添加耗材";
+"material.update" = "更新耗材";
+"material.add.new" = "添加新耗材";
+"material.clear" = "清除";
+"material.select.brand.title" = "选择品牌";
+"material.custom.brand" = "自定义品牌...";
+"material.enter.custom.brand" = "输入自定义品牌";
+"material.brand.name" = "品牌名称";
+
+/* Archive Management */
+"archive.title" = "归档管理";
+"archive.done" = "完成";
+"archive.restore.title" = "恢复耗材";
+"archive.restore" = "恢复";
+"archive.restore.confirm" = "恢复 %@%@ %@ 的耗材？";
+"archive.delete.title" = "删除耗材";
+"archive.delete.confirm" = "您确定要永久删除这个 %@%@ %@ 的耗材吗？此操作无法撤销。";
+"archive.archived.spools" = "已归档耗材";
+"archive.material.types" = "材料类型";
+"archive.empty.title" = "没有已归档的耗材";
+"archive.empty.message" = "已归档的耗材将显示在这里";
+"archive.remaining" = "剩余 %d g";
+
+/* Settings */
+"settings.title" = "设置";
+"settings.data.management" = "数据管理";
+"settings.data.management.description" = "管理已归档的耗材，恢复或删除它们";
+
+/* Detail View Archive */
+"detail.archive.title" = "归档耗材";
+"detail.archive.confirm" = "您确定要归档这个 %@%@ %@ 的耗材吗？它将从主视图隐藏，但稍后可以恢复。";
+
+/* Detail View */
+"detail.title" = "耗材详情";
+"detail.notes" = "备注:";
+"detail.material.type" = "材料类型:";
+"detail.brand" = "品牌:";
+"detail.diameter" = "直径:";
+"detail.stock" = "库存";
+"detail.usage.rate" = "使用率";
+
+/* Track Usage View */
+"usage.print.details" = "打印详情";
+"usage.usage.details" = "使用详情";
+"usage.print.job.name" = "打印任务名称";
+"usage.enter.job.name" = "输入任务名称。";
+"usage.add.spool" = "添加耗材";
+"usage.no.spools.added" = "未添加耗材";
+"usage.amount.used" = "使用量";
+"usage.remaining" = "剩余:";
+"usage.auto.adjusted" = "已自动调整为剩余: %d g";
+"usage.available" = "可用:";
+"usage.select.spool" = "选择耗材";
+"usage.remaining.weight" = "剩余: %d g";
+
+/* Garden View */
+"garden.search.placeholder" = "按品牌或颜色搜索";
+
+/* Filament Card */
+"card.unknown" = "未知";
