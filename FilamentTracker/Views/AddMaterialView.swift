@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct AddMaterialView: View {
     @Environment(\.modelContext) private var modelContext
@@ -136,9 +137,11 @@ struct AddMaterialView: View {
                                 .cornerRadius(12)
                             }
                             .confirmationDialog(String(localized: "material.choose.image.source", bundle: .main), isPresented: $showActionSheet) {
-                                Button(String(localized: "material.camera", bundle: .main)) {
-                                    sourceType = .camera
-                                    showImagePicker = true
+                                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                                    Button(String(localized: "material.camera", bundle: .main)) {
+                                        sourceType = .camera
+                                        showImagePicker = true
+                                    }
                                 }
                                 Button(String(localized: "material.photo.library", bundle: .main)) {
                                     sourceType = .photoLibrary

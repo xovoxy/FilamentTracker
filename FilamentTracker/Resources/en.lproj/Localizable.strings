@@ -1,7 +1,7 @@
 /* Filament Tracker - English Localization */
 
 /* General */
-"app.name" = "Filament Tracker";
+"app.name" = "3D Filament Garden";
 "cancel" = "Cancel";
 "save" = "Save";
 "edit" = "Edit";
@@ -70,7 +70,7 @@
 "usage.new.remaining" = "New Remaining";
 
 /* Home View */
-"home.title" = "Filament Garden";
+"home.title" = "3D Filament Garden";
 "home.total.stock" = "Total Stock";
 "home.total.usage" = "Total Usage";
 "home.most.used" = "Most Used";
