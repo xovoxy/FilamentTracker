@@ -199,8 +199,8 @@ struct DetailView: View {
             // Price Card
             MetricCard(
                 icon: "dollarsign.circle",
-                title: "Price",
-                value: filament.price != nil ? formatPrice(filament.price!) : "N/A",
+                title: String(localized: "detail.price", bundle: .main),
+                value: filament.price != nil ? formatPrice(filament.price!) : String(localized: "home.na", bundle: .main),
                 color: Color(hex: "#8BC5D9")
             )
         }

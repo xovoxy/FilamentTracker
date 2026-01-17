@@ -744,21 +744,21 @@ struct ColorMaterialStatsSheet: View {
                         // Stats Cards
                         HStack(spacing: 12) {
                             GroupStatsCard(
-                                title: "Spools",
+                                title: String(localized: "home.group.stats.spools", bundle: .main),
                                 value: "\(group.totalCount)",
                                 icon: "cylinder.split.1x2",
                                 color: Color(hex: "#D97A6A")
                             )
                             
                             GroupStatsCard(
-                                title: "Remaining",
+                                title: String(localized: "home.group.stats.remaining", bundle: .main),
                                 value: String(format: "%.1f kg", group.totalRemaining / 1000.0 ),
                                 icon: "scalemass",
                                 color: Color(hex: "#8A7BC4")
                             )
                             
                             GroupStatsCard(
-                                title: "Used",
+                                title: String(localized: "home.group.stats.used", bundle: .main),
                                 value: String(format: "%.0f g", group.totalUsed),
                                 icon: "arrow.down.circle",
                                 color: Color(hex: "#6B9563")

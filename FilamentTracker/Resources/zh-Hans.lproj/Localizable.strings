@@ -97,6 +97,9 @@
 "home.usage.trend" = "使用趋势";
 "home.spool.details" = "耗材详情";
 "home.usage.history" = "使用历史";
+"home.group.stats.spools" = "耗材";
+"home.group.stats.remaining" = "剩余";
+"home.group.stats.used" = "已用";
 "home.spools.in.group" = "此组中有 %d 个耗材";
 "home.no.spools.remaining" = "没有剩余的耗材";
 "home.swipe.to.archive" = "向左滑动任何耗材以归档";
@@ -160,6 +163,7 @@
 "detail.diameter" = "直径:";
 "detail.stock" = "库存";
 "detail.usage.rate" = "使用率";
+"detail.price" = "价格";
 
 /* Track Usage View */
 "usage.print.details" = "打印详情";

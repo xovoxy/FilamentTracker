@@ -97,6 +97,9 @@
 "home.usage.trend" = "Usage Trend";
 "home.spool.details" = "Spool Details";
 "home.usage.history" = "Usage History";
+"home.group.stats.spools" = "Spools";
+"home.group.stats.remaining" = "Remaining";
+"home.group.stats.used" = "Used";
 "home.spools.in.group" = "%d %@ in this group";
 "home.no.spools.remaining" = "No spools remaining";
 "home.swipe.to.archive" = "Swipe left on any spool to archive";
@@ -160,6 +163,7 @@
 "detail.diameter" = "Diameter:";
 "detail.stock" = "Stock";
 "detail.usage.rate" = "Usage Rate";
+"detail.price" = "Price";
 
 /* Track Usage View */
 "usage.print.details" = "PRINT DETAILS";
