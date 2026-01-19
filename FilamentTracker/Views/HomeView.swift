@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 import Charts
+import UIKit
 
 // MARK: - Filament Group Model
 struct FilamentGroup: Identifiable {
@@ -936,13 +937,7 @@ struct GroupFilamentList: View {
         VStack(spacing: 8) {
             ForEach(filaments) { filament in
                 HStack(spacing: 12) {
-                    Circle()
-                        .fill(Color(hex: filament.colorHex))
-                        .frame(width: 12, height: 12)
-                        .overlay(
-                            Circle()
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
-                        )
+                    BrandLogoView(brand: filament.brand)
                     
                     VStack(alignment: .leading, spacing: 2) {
                         Text(filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : filament.brand)
@@ -1193,13 +1188,7 @@ struct GroupEditRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            Circle()
-                .fill(Color(hex: filament.colorHex))
-                .frame(width: 12, height: 12)
-                .overlay(
-                    Circle()
-                        .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
-                )
+            BrandLogoView(brand: filament.brand)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(filament.brand.isEmpty ? String(localized: "home.unknown.brand", bundle: .main) : filament.brand)
@@ -1249,6 +1238,55 @@ struct GroupEditRow: View {
             return Color(hex: "#D4A574")
         } else {
             return Color.gray.opacity(0.5)
+        }
+    }
+}
+
+// MARK: - Brand Logo View
+struct BrandLogoView: View {
+    let brand: String
+    
+    private func brandLogoImageName(for brand: String) -> String {
+        let trimmed = brand.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+        
+        let lowered = trimmed.lowercased()
+        let allowedCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
+        let sanitizedScalars = lowered
+            .replacingOccurrences(of: " ", with: "-")
+            .unicodeScalars
+            .map { allowedCharacters.contains($0) ? Character($0) : "-" }
+        
+        let sanitized = String(sanitizedScalars)
+        return "brand-\(sanitized)"
+    }
+    
+    private func logoUIImage(for brand: String) -> UIImage? {
+        let imageName = brandLogoImageName(for: brand)
+        guard !imageName.isEmpty else { return nil }
+        return UIImage(named: imageName)
+    }
+    
+    var body: some View {
+        if let uiImage = logoUIImage(for: brand) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+        } else {
+            let displayText = brand.trimmingCharacters(in: .whitespacesAndNewlines)
+            let letter = displayText.isEmpty ? "?" : String(displayText.prefix(1)).uppercased()
+            
+            ZStack {
+                Circle()
+                    .fill(Color(hex: "#6B9B7A").opacity(0.2))
+                Text(letter)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Color(hex: "#6B9B7A"))
+            }
+            .frame(width: 24, height: 24)
         }
     }
 }

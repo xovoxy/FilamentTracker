@@ -155,15 +155,10 @@ struct DetailView: View {
                     )
                     
                     if let notes = filament.notes, !notes.isEmpty {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(String(localized: "detail.notes", bundle: .main))
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            Text(notes)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+                        InfoRow(
+                            label: String(localized: "detail.notes", bundle: .main),
+                            value: notes
+                        )
                         .padding(.top, 2)
                     }
                 }

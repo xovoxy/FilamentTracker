@@ -158,7 +158,7 @@
 
 /* Detail View */
 "detail.title" = "耗材详情";
-"detail.notes" = "备注:";
+"detail.notes" = "备注";
 "detail.material.type" = "材料类型:";
 "detail.brand" = "品牌:";
 "detail.diameter" = "直径:";

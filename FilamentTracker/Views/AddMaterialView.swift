@@ -490,15 +490,19 @@ struct AddMaterialView: View {
         let stockGrams = stockKg * 1000.0
         
         if let existing = filament {
-            // In edit mode, don't update material, colorName, or colorHex
+            // 编辑模式下：只更新基础信息和总重量，保留已使用的重量，避免把使用率清零
             existing.brand = brand
             // existing.material = material  // Not allowed to change
             // existing.colorName = colorName  // Not allowed to change
             // existing.colorHex = colorHex  // Not allowed to change
             existing.diameter = diameter
+            
+            let previousRemaining = existing.remainingWeight
             existing.initialWeight = stockGrams
-            existing.remainingWeight = stockGrams
-            existing.emptySpoolWeight = nil
+            // 如果用户调小了初始重量，确保剩余重量不会超过新的初始重量
+            existing.remainingWeight = min(previousRemaining, stockGrams)
+            
+            // 不再清空空线盘重量，保留用户之前设置的数据
             existing.price = Decimal(string: price)
             existing.notes = notes.isEmpty ? nil : notes
         } else {
