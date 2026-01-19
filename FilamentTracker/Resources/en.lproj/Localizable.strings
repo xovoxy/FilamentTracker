@@ -150,6 +150,7 @@
 "settings.title" = "Settings";
 "settings.data.management" = "Data Management";
 "settings.data.management.description" = "Manage archived filaments and restore or delete them";
+"settings.statistics" = "Statistics";
 
 /* Detail View Archive */
 "detail.archive.title" = "Archive Filament";
@@ -185,3 +186,16 @@
 
 /* Filament Card */
 "card.unknown" = "Unknown";
+
+/* Statistics */
+"statistics.title" = "Analytics & Statistics";
+"statistics.total.spools.used" = "Total spools used";
+"statistics.total.weight.used" = "Total weight used";
+"statistics.total.cost" = "Total cost";
+"statistics.total.usage.length" = "Total usage length";
+"statistics.material.usage.breakdown" = "Material Usage Breakdown";
+"statistics.usage.trend.over.time" = "Usage Trend Over Time";
+"statistics.cost.analysis" = "Cost Analysis";
+"statistics.usage.by.material" = "Usage by Material Type";
+"statistics.filter.date.range" = "Filter / Date Range";
+"statistics.no.data" = "No data available";

@@ -65,6 +65,8 @@ struct HomeView: View {
     @State private var showArchiveManagement = false
     @State private var showProfile = false
     @State private var showLanguagePicker = false
+    @State private var showSettings = false
+    @State private var showStatistics = false
     @State private var selectedGroup: FilamentGroup?
     @State private var groupToEdit: FilamentGroup?
     @State private var groupToArchive: FilamentGroup?
@@ -209,6 +211,28 @@ struct HomeView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Hamburger Menu in leading position
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        Button {
+                            showStatistics = true
+                        } label: {
+                            Label(String(localized: "settings.statistics", bundle: .main), systemImage: "chart.bar.fill")
+                        }
+                        
+                        Divider()
+                        
+                        Button {
+                            showArchiveManagement = true
+                        } label: {
+                            Label(String(localized: "home.archive.management", bundle: .main), systemImage: "archivebox")
+                        }
+                    } label: {
+                        Image(systemName: "line.3.horizontal")
+                            .font(.title3)
+                            .foregroundColor(.primary)
+                    }
+                }
                 
                 ToolbarItem(placement: .principal) {
                     // Filament Garden Logo - spool with leaf
@@ -231,14 +255,6 @@ struct HomeView: View {
                             showLanguagePicker = true
                         } label: {
                             Label(String(localized: "home.language", bundle: .main), systemImage: "globe")
-                        }
-                        
-                        Divider()
-                        
-                        Button {
-                            showArchiveManagement = true
-                        } label: {
-                            Label(String(localized: "home.archive.management", bundle: .main), systemImage: "archivebox")
                         }
                         
                         Divider()
@@ -279,6 +295,9 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showLanguagePicker) {
                 LanguagePickerView(languageManager: languageManager)
+            }
+            .sheet(isPresented: $showStatistics) {
+                StatisticsView()
             }
             .alert(String(localized: "detail.archive", bundle: .main), isPresented: $showArchiveAlert) {
                 Button(String(localized: "cancel", bundle: .main), role: .cancel) {
@@ -428,7 +447,7 @@ struct HomeView: View {
             ActionButton(
                 icon: {
                     // TODO: Plus Sign Icon
-                    Image(systemName: "plus")
+                    Image(systemName: "plus.circle")
                         .font(.title3)
                 },
                 title: String(localized: "home.add.material", bundle: .main),
@@ -441,7 +460,7 @@ struct HomeView: View {
             ActionButton(
                 icon: {
                     // TODO: Log Usage Icon - Checklist/Edit
-                    Image(systemName: "checklist")
+                    Image(systemName: "doc")
                         .font(.title3)
                 },
                 title: String(localized: "home.log.usage", bundle: .main),

@@ -11,11 +11,24 @@ import SwiftData
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showArchiveManagement = false
+    @State private var showStatistics = false
     
     var body: some View {
         NavigationStack {
             List {
                 Section {
+                    Button {
+                        showStatistics = true
+                    } label: {
+                        HStack {
+                            Label(String(localized: "settings.statistics", bundle: .main), systemImage: "chart.bar.fill")
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
                     Button {
                         showArchiveManagement = true
                     } label: {
@@ -44,6 +57,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showArchiveManagement) {
                 ArchiveManagementView()
+            }
+            .sheet(isPresented: $showStatistics) {
+                StatisticsView()
             }
         }
     }

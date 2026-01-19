@@ -150,6 +150,7 @@
 "settings.title" = "设置";
 "settings.data.management" = "数据管理";
 "settings.data.management.description" = "管理已归档的耗材，恢复或删除它们";
+"settings.statistics" = "耗材统计";
 
 /* Detail View Archive */
 "detail.archive.title" = "归档耗材";
@@ -185,3 +186,16 @@
 
 /* Filament Card */
 "card.unknown" = "未知";
+
+/* Statistics */
+"statistics.title" = "分析与统计";
+"statistics.total.spools.used" = "总使用卷数";
+"statistics.total.weight.used" = "总使用重量";
+"statistics.total.cost" = "总成本";
+"statistics.total.usage.length" = "总使用长度";
+"statistics.material.usage.breakdown" = "材料使用分布";
+"statistics.usage.trend.over.time" = "使用趋势";
+"statistics.cost.analysis" = "成本分析";
+"statistics.usage.by.material" = "按材料类型使用量";
+"statistics.filter.date.range" = "筛选 / 日期范围";
+"statistics.no.data" = "暂无数据";
