@@ -19,6 +19,20 @@ enum TimeFilterType: String, CaseIterable {
     }
 }
 
+enum ChartType: Identifiable {
+    case usageTrend
+    case costAnalysis
+    case usageByMaterial
+    
+    var id: String {
+        switch self {
+        case .usageTrend: return "usageTrend"
+        case .costAnalysis: return "costAnalysis"
+        case .usageByMaterial: return "usageByMaterial"
+        }
+    }
+}
+
 struct StatisticsView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var allFilaments: [Filament]
@@ -28,6 +42,24 @@ struct StatisticsView: View {
     @State private var selectedMonths: Int = 6 // Default to last 6 months
     @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
     @State private var showTimeFilterMenu = false
+    @State private var selectedChartForFullscreen: ChartType?
+    
+    // Helper function to show chart in fullscreen with landscape orientation
+    private func showChartFullscreen(_ chartType: ChartType) {
+        // Lock to landscape before showing fullscreen
+        AppDelegate.orientationLock = .landscape
+        if #available(iOS 16.0, *) {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscape))
+            }
+        }
+        UIViewController.attemptRotationToDeviceOrientation()
+        
+        // Small delay to allow orientation change to start
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            selectedChartForFullscreen = chartType
+        }
+    }
     
     // Computed property for filtered logs based on time filter
     private var filteredLogs: [UsageLog] {
@@ -166,6 +198,16 @@ struct StatisticsView: View {
                 }
             }
         }
+        .fullScreenCover(item: $selectedChartForFullscreen) { chartType in
+            ChartDetailView(
+                chartType: chartType,
+                filaments: allFilaments,
+                logs: filteredLogs,
+                timeFilter: selectedTimeFilter,
+                selectedMonths: selectedMonths,
+                selectedYear: selectedYear
+            )
+        }
     }
     
     // MARK: - Summary Cards Section
@@ -260,6 +302,9 @@ struct StatisticsView: View {
             }
             .background(Color(.systemBackground).opacity(0.9))
             .cornerRadius(16)
+            .onTapGesture {
+                showChartFullscreen(.usageTrend)
+            }
             
             // Cost Analysis (Bar Chart)
             VStack(alignment: .leading, spacing: 12) {
@@ -276,6 +321,9 @@ struct StatisticsView: View {
             }
             .background(Color(.systemBackground).opacity(0.9))
             .cornerRadius(16)
+            .onTapGesture {
+                showChartFullscreen(.costAnalysis)
+            }
             
             // Usage by Material Type (Horizontal Bar Chart)
             VStack(alignment: .leading, spacing: 12) {
@@ -286,12 +334,15 @@ struct StatisticsView: View {
                     .padding(.top)
                 
                 UsageByMaterialChart(filaments: allFilaments, logs: filteredLogs)
-                    .frame(height: 200)
+                    .frame(minHeight: 200)
                     .padding(.horizontal)
                     .padding(.bottom)
             }
             .background(Color(.systemBackground).opacity(0.9))
             .cornerRadius(16)
+            .onTapGesture {
+                showChartFullscreen(.usageByMaterial)
+            }
         }
     }
     
@@ -817,8 +868,22 @@ struct UsageByMaterialChart: View {
             .frame(maxWidth: .infinity)
             .frame(height: 200)
         } else {
-            Chart {
-                ForEach(usageData, id: \.material) { data in
+            HStack(spacing: 0) {
+                // Material labels on the left
+                VStack(alignment: .trailing, spacing: 0) {
+                    ForEach(usageData, id: \.material) { data in
+                        Text(data.material)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                            .frame(height: 24, alignment: .center)
+                    }
+                }
+                .frame(width: 60)
+                .padding(.trailing, 8)
+                
+                // Chart on the right
+                Chart(usageData, id: \.material) { data in
                     BarMark(
                         x: .value("Usage", data.usage),
                         y: .value("Material", data.material)
@@ -832,19 +897,24 @@ struct UsageByMaterialChart: View {
                             .padding(.leading, 4)
                     }
                 }
-            }
-                    .chartXAxis {
-                AxisMarks { value in
-                    AxisGridLine()
-                    AxisValueLabel {
-                        if let usage = value.as(Double.self) {
-                            if usage >= 1000 {
-                                Text(String(format: "%.1fkg", usage / 1000.0))
-                            } else {
-                                Text("\(Int(usage))g")
+                .chartXAxis {
+                    AxisMarks(position: .bottom) { value in
+                        AxisGridLine()
+                        AxisValueLabel {
+                            if let usage = value.as(Double.self) {
+                                if usage >= 1000 {
+                                    Text(String(format: "%.1fkg", usage / 1000.0))
+                                } else {
+                                    Text("\(Int(usage))g")
+                                }
                             }
                         }
                     }
+                }
+                .chartYAxis(.hidden)
+                .chartPlotStyle { plotArea in
+                    // 保证每个柱状条的高度和左侧文字一致（24）
+                    plotArea.frame(height: CGFloat(usageData.count) * 24)
                 }
             }
         }
@@ -883,6 +953,116 @@ struct UsageByMaterialChart: View {
             return String(format: "%.1fkg", grams / 1000.0)
         } else {
             return String(format: "%.0fg", grams)
+        }
+    }
+}
+
+// MARK: - Chart Detail View (Fullscreen Landscape)
+struct ChartDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    let chartType: ChartType
+    let filaments: [Filament]
+    let logs: [UsageLog]
+    let timeFilter: TimeFilterType
+    let selectedMonths: Int
+    let selectedYear: Int
+    
+    var body: some View {
+        ZStack {
+            // Background - follow system
+            Color(UIColor.systemBackground)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 16) {
+                // Header with title and close button
+                HStack {
+                    Text(chartTitle)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    Button {
+                        // Restore orientation and dismiss immediately
+                        restoreOrientationAndDismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal, 32)
+                .padding(.top, 16)
+                
+                // Chart content
+                chartContent
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 20)
+            }
+        }
+        .persistentSystemOverlays(.hidden)
+        .statusBar(hidden: true)
+        .onDisappear {
+            // Restore all orientations when view disappears
+            AppDelegate.orientationLock = .all
+            // Request rotation back to portrait
+            if #available(iOS 16.0, *) {
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                    windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
+                }
+            }
+            // Trigger orientation update
+            UIViewController.attemptRotationToDeviceOrientation()
+        }
+    }
+    
+    private func restoreOrientationAndDismiss() {
+        // Restore all orientations
+        AppDelegate.orientationLock = .all
+        // Request rotation back to portrait
+        if #available(iOS 16.0, *) {
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+                windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
+            }
+        }
+        // Trigger orientation update
+        UIViewController.attemptRotationToDeviceOrientation()
+        
+        // Dismiss immediately so rotation happens while dismissing
+        dismiss()
+    }
+    
+    private var chartTitle: String {
+        switch chartType {
+        case .usageTrend:
+            return String(localized: "statistics.usage.trend.over.time", bundle: .main)
+        case .costAnalysis:
+            return String(localized: "statistics.cost.analysis", bundle: .main)
+        case .usageByMaterial:
+            return String(localized: "statistics.usage.by.material", bundle: .main)
+        }
+    }
+    
+    @ViewBuilder
+    private var chartContent: some View {
+        switch chartType {
+        case .usageTrend:
+            StatisticsUsageTrendChart(
+                logs: logs,
+                timeFilter: timeFilter,
+                selectedMonths: selectedMonths,
+                selectedYear: selectedYear
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+        case .costAnalysis:
+            CostAnalysisChart(filaments: filaments, logs: logs)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+        case .usageByMaterial:
+            UsageByMaterialChart(filaments: filaments, logs: logs)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }
