@@ -147,11 +147,8 @@
 "archive.remaining" = "%d g remaining";
 
 /* Settings */
-"settings.title" = "Settings";
-"settings.data.management" = "Data Management";
-"settings.data.management.description" = "Manage archived filaments and restore or delete them";
 "settings.statistics" = "Statistics";
-
+ 
 /* Detail View Archive */
 "detail.archive.title" = "Archive Filament";
 "detail.archive.confirm" = "Are you sure you want to archive this %@%@ %@ spool? It will be hidden from the main view but can be restored later.";
@@ -199,3 +196,33 @@
 "statistics.usage.by.material" = "Usage by Material Type";
 "statistics.filter.date.range" = "Filter / Date Range";
 "statistics.no.data" = "No data available";
+
+/* Data Migration */
+"migration.title" = "Data Migration";
+"migration.subtitle" = "Export and import your material data";
+"migration.description" = "You can export your material data as JSON file or import data from a JSON file to migrate your data between devices.";
+"migration.export.title" = "Export Data";
+"migration.export.button" = "Export to JSON";
+"migration.export.description" = "Download your material data as JSON file";
+"migration.export.success" = "Export Successful";
+"migration.export.success.message" = "Data exported successfully";
+"migration.export.error" = "Export Failed";
+"migration.import.title" = "Import Data";
+"migration.import.button" = "Import from JSON";
+"migration.import.description" = "Import material data from JSON file";
+"migration.import.success" = "Import Successful";
+"migration.import.success.message" = "Successfully imported %d filaments";
+"migration.import.error" = "Import Failed";
+"migration.import.no.permission" = "The selected file cannot be accessed. Please make sure the file is stored locally (not only in iCloud) and try again.";
+"migration.import.options" = "Import Options";
+"migration.import.mode" = "Import Mode";
+"migration.import.merge" = "Merge Import";
+"migration.import.merge.description" = "Keep existing data, only add new data";
+"migration.import.replace" = "Replace Import";
+"migration.import.replace.description" = "Clear existing data before import (use with caution)";
+"migration.json.example" = "JSON Format Example";
+"migration.how.to.use" = "How to Use";
+"migration.step.1" = "Export your data to JSON file";
+"migration.step.2" = "Transfer the JSON file to your new device";
+"migration.step.3" = "Import the JSON file on your new device";
+"ok" = "OK";

@@ -68,6 +68,7 @@ struct HomeView: View {
     @State private var showLanguagePicker = false
     @State private var showSettings = false
     @State private var showStatistics = false
+    @State private var showDataMigration = false
     @State private var selectedGroup: FilamentGroup?
     @State private var groupToEdit: FilamentGroup?
     @State private var groupToArchive: FilamentGroup?
@@ -253,6 +254,14 @@ struct HomeView: View {
                     // Settings Menu
                     Menu {
                         Button {
+                            showDataMigration = true
+                        } label: {
+                            Label(String(localized: "migration.title", bundle: .main), systemImage: "arrow.left.arrow.right")
+                        }
+                        
+                        Divider()
+                        
+                        Button {
                             showLanguagePicker = true
                         } label: {
                             Label(String(localized: "home.language", bundle: .main), systemImage: "globe")
@@ -299,6 +308,9 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showStatistics) {
                 StatisticsView()
+            }
+            .sheet(isPresented: $showDataMigration) {
+                DataMigrationView()
             }
             .alert(String(localized: "detail.archive", bundle: .main), isPresented: $showArchiveAlert) {
                 Button(String(localized: "cancel", bundle: .main), role: .cancel) {

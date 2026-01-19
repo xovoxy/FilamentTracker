@@ -147,11 +147,8 @@
 "archive.remaining" = "剩余 %d g";
 
 /* Settings */
-"settings.title" = "设置";
-"settings.data.management" = "数据管理";
-"settings.data.management.description" = "管理已归档的耗材，恢复或删除它们";
-"settings.statistics" = "耗材统计";
-
+"settings.statistics" = "统计分析";
+ 
 /* Detail View Archive */
 "detail.archive.title" = "归档耗材";
 "detail.archive.confirm" = "您确定要归档这个 %@%@ %@ 的耗材吗？它将从主视图隐藏，但稍后可以恢复。";
@@ -199,3 +196,33 @@
 "statistics.usage.by.material" = "按材料类型使用量";
 "statistics.filter.date.range" = "筛选 / 日期范围";
 "statistics.no.data" = "暂无数据";
+
+/* Data Migration */
+"migration.title" = "数据迁移";
+"migration.subtitle" = "导出和导入您的材料数据";
+"migration.description" = "您可以将材料数据导出为 JSON 文件，或从 JSON 文件导入数据以在设备之间迁移数据。";
+"migration.export.title" = "导出数据";
+"migration.export.button" = "导出到 JSON";
+"migration.export.description" = "下载您的材料数据为 JSON 文件";
+"migration.export.success" = "导出成功";
+"migration.export.success.message" = "数据已成功导出";
+"migration.export.error" = "导出失败";
+"migration.import.title" = "导入数据";
+"migration.import.button" = "从 JSON 导入";
+"migration.import.description" = "从 JSON 文件导入材料数据";
+"migration.import.success" = "导入成功";
+"migration.import.success.message" = "成功导入 %d 个耗材";
+"migration.import.error" = "导入失败";
+"migration.import.no.permission" = "无法访问所选文件，请确认文件已下载到本地（而不是仅在 iCloud 中）后重试。";
+"migration.import.options" = "导入选项";
+"migration.import.mode" = "导入模式";
+"migration.import.merge" = "合并导入";
+"migration.import.merge.description" = "保留现有数据，仅添加新数据";
+"migration.import.replace" = "替换导入";
+"migration.import.replace.description" = "清空现有数据后导入（谨慎使用）";
+"migration.json.example" = "JSON 格式示例";
+"migration.how.to.use" = "使用说明";
+"migration.step.1" = "将数据导出为 JSON 文件";
+"migration.step.2" = "将 JSON 文件传输到新设备";
+"migration.step.3" = "在新设备上导入 JSON 文件";
+"ok" = "确定";
