@@ -518,10 +518,39 @@ struct AddMaterialView: View {
                 price: Decimal(string: price),
                 notes: notes.isEmpty ? nil : notes
             )
+            
+            // Ensure we have a material-color configuration for this material type
+            createMaterialColorConfigIfNeeded(for: material)
+            
             modelContext.insert(newFilament)
         }
         
         dismiss()
+    }
+    
+    /// Create a material-color configuration entry if this material type has not been seen before.
+    private func createMaterialColorConfigIfNeeded(for material: String) {
+        let trimmed = material.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        
+        // Check if a config for this material already exists (case-insensitive)
+        let descriptor = FetchDescriptor<MaterialColorConfig>()
+        let existingConfigs = (try? modelContext.fetch(descriptor)) ?? []
+        if existingConfigs.contains(where: { $0.material.caseInsensitiveCompare(trimmed) == .orderedSame }) {
+            return
+        }
+        
+        // Determine which colors are already used
+        let usedColors = Set(existingConfigs.map { $0.colorHex.uppercased() })
+        
+        // Pick the first unused color from the default palette, otherwise fall back to a random one
+        let palette = MaterialColorConfig.defaultPalette
+        let availableColor = palette.first(where: { !usedColors.contains($0.uppercased()) })
+            ?? palette.randomElement()
+            ?? "#7FD4B0"
+        
+        let config = MaterialColorConfig(material: trimmed, colorHex: availableColor)
+        modelContext.insert(config)
     }
 }
 
@@ -956,5 +985,5 @@ extension Color {
 
 #Preview {
     AddMaterialView()
-        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self], inMemory: true)
+        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self, MaterialColorConfig.self], inMemory: true)
 }

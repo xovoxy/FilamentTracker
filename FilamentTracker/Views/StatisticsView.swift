@@ -463,6 +463,8 @@ struct MaterialUsageBreakdownChart: View {
     let filaments: [Filament]
     let logs: [UsageLog]
     
+    @Query private var materialColorConfigs: [MaterialColorConfig]
+    
     var body: some View {
         if materialUsageData.isEmpty {
             VStack(spacing: 8) {
@@ -514,18 +516,19 @@ struct MaterialUsageBreakdownChart: View {
     }
     
     private func colorForMaterial(_ material: String) -> Color {
-        switch material.uppercased() {
-        case "PLA":
-            return Color(hex: "#7FD4B0")
-        case "PETG":
-            return Color(hex: "#B88A5A")
-        case "ABS":
-            return Color(hex: "#8BC5D9")
-        case "TPU":
-            return Color(hex: "#8A7BC4")
-        default:
-            return Color.gray
+        if let config = materialColorConfigs.first(where: { $0.material.caseInsensitiveCompare(material) == .orderedSame }) {
+            return Color(hex: config.colorHex)
         }
+        
+        // Fallback to a deterministic color based on material name
+        let palette = MaterialColorConfig.defaultPalette
+        if let index = palette.indices.first {
+            let hashValue = abs(material.lowercased().hashValue)
+            let color = palette[palette.index(index, offsetBy: hashValue % palette.count)]
+            return Color(hex: color)
+        }
+        
+        return Color.gray
     }
 }
 
@@ -535,6 +538,8 @@ struct StatisticsUsageTrendChart: View {
     let timeFilter: TimeFilterType
     let selectedMonths: Int
     let selectedYear: Int
+    
+    @Query private var materialColorConfigs: [MaterialColorConfig]
     
     var body: some View {
         if usageData.isEmpty {
@@ -746,18 +751,18 @@ struct StatisticsUsageTrendChart: View {
     }
     
     private func colorForMaterial(_ material: String) -> Color {
-        switch material.uppercased() {
-        case "PLA":
-            return Color(hex: "#7FD4B0")
-        case "PETG":
-            return Color(hex: "#B88A5A")
-        case "ABS":
-            return Color(hex: "#8BC5D9")
-        case "TPU":
-            return Color(hex: "#8A7BC4")
-        default:
-            return Color.gray
+        if let config = materialColorConfigs.first(where: { $0.material.caseInsensitiveCompare(material) == .orderedSame }) {
+            return Color(hex: config.colorHex)
         }
+        
+        let palette = MaterialColorConfig.defaultPalette
+        if let index = palette.indices.first {
+            let hashValue = abs(material.lowercased().hashValue)
+            let color = palette[palette.index(index, offsetBy: hashValue % palette.count)]
+            return Color(hex: color)
+        }
+        
+        return Color.gray
     }
 }
 
@@ -765,6 +770,8 @@ struct StatisticsUsageTrendChart: View {
 struct CostAnalysisChart: View {
     let filaments: [Filament]
     let logs: [UsageLog]
+    
+    @Query private var materialColorConfigs: [MaterialColorConfig]
     
     var body: some View {
         if costData.isEmpty {
@@ -827,18 +834,18 @@ struct CostAnalysisChart: View {
     }
     
     private func colorForMaterial(_ material: String) -> Color {
-        switch material.uppercased() {
-        case "PLA":
-            return Color(hex: "#7FD4B0")
-        case "PETG":
-            return Color(hex: "#B88A5A")
-        case "ABS":
-            return Color(hex: "#8BC5D9")
-        case "TPU":
-            return Color(hex: "#8A7BC4")
-        default:
-            return Color.gray
+        if let config = materialColorConfigs.first(where: { $0.material.caseInsensitiveCompare(material) == .orderedSame }) {
+            return Color(hex: config.colorHex)
         }
+        
+        let palette = MaterialColorConfig.defaultPalette
+        if let index = palette.indices.first {
+            let hashValue = abs(material.lowercased().hashValue)
+            let color = palette[palette.index(index, offsetBy: hashValue % palette.count)]
+            return Color(hex: color)
+        }
+        
+        return Color.gray
     }
     
     private func formatCost(_ cost: Decimal) -> String {
@@ -854,6 +861,8 @@ struct CostAnalysisChart: View {
 struct UsageByMaterialChart: View {
     let filaments: [Filament]
     let logs: [UsageLog]
+    
+    @Query private var materialColorConfigs: [MaterialColorConfig]
     
     var body: some View {
         if usageData.isEmpty {
@@ -934,18 +943,18 @@ struct UsageByMaterialChart: View {
     }
     
     private func colorForMaterial(_ material: String) -> Color {
-        switch material.uppercased() {
-        case "PLA":
-            return Color(hex: "#7FD4B0")
-        case "PETG":
-            return Color(hex: "#B88A5A")
-        case "ABS":
-            return Color(hex: "#8BC5D9")
-        case "TPU":
-            return Color(hex: "#8A7BC4")
-        default:
-            return Color.gray
+        if let config = materialColorConfigs.first(where: { $0.material.caseInsensitiveCompare(material) == .orderedSame }) {
+            return Color(hex: config.colorHex)
         }
+        
+        let palette = MaterialColorConfig.defaultPalette
+        if let index = palette.indices.first {
+            let hashValue = abs(material.lowercased().hashValue)
+            let color = palette[palette.index(index, offsetBy: hashValue % palette.count)]
+            return Color(hex: color)
+        }
+        
+        return Color.gray
     }
     
     private func formatWeight(_ grams: Double) -> String {

@@ -28,8 +28,10 @@ struct FilamentTrackerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootInitializer {
+                ContentView()
+            }
         }
-        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self])
+        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self, MaterialColorConfig.self])
     }
 }
