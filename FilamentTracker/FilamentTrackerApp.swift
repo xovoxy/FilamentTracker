@@ -31,6 +31,7 @@ struct FilamentTrackerApp: App {
             RootInitializer {
                 ContentView()
             }
+            .preferredColorScheme(.light)
         }
         .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self, MaterialColorConfig.self])
     }
