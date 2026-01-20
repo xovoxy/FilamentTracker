@@ -217,8 +217,10 @@ struct StatisticsView: View {
                 // Total Spools Used Card
                 StatisticsCard(
                     icon: {
-                        Image(systemName: "cylinder.split.1x2")
-                            .font(.system(size: 28))
+                        Image("static.spools-used")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 52, height: 52)
                     },
                     title: String(localized: "statistics.total.spools.used", bundle: .main),
                     value: "\(totalSpoolsUsed)",
@@ -228,8 +230,10 @@ struct StatisticsView: View {
                 // Total Weight Used Card
                 StatisticsCard(
                     icon: {
-                        Image(systemName: "scalemass")
-                            .font(.system(size: 28))
+                        Image("static.weight-used")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 44, height: 44)
                     },
                     title: String(localized: "statistics.total.weight.used", bundle: .main),
                     value: formatWeight(totalWeightUsed),
@@ -241,8 +245,10 @@ struct StatisticsView: View {
                 // Total Cost Card
                 StatisticsCard(
                     icon: {
-                        Image(systemName: "yensign.circle.fill")
-                            .font(.system(size: 28))
+                        Image("static.total.cost")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 44, height: 44)
                     },
                     title: String(localized: "statistics.total.cost", bundle: .main),
                     value: formatCost(totalCost),
@@ -253,7 +259,7 @@ struct StatisticsView: View {
                 StatisticsCard(
                     icon: {
                         Image(systemName: "ruler")
-                            .font(.system(size: 28))
+                            .font(.system(size: 36))
                     },
                     title: String(localized: "statistics.total.usage.length", bundle: .main),
                     value: formatLength(totalUsageLength),
@@ -447,6 +453,7 @@ struct StatisticsCard<Icon: View>: View {
             Spacer()
             
             icon()
+                .frame(width: 36, height: 36)
                 .foregroundColor(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
