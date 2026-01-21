@@ -168,6 +168,8 @@
 "usage.usage.details" = "使用详情";
 "usage.print.job.name" = "打印任务名称";
 "usage.enter.job.name" = "输入任务名称。";
+"usage.summary.total.weight" = "总用量";
+"usage.summary.estimated.cost" = "预估金额";
 "usage.add.spool" = "添加耗材";
 "usage.no.spools.added" = "未添加耗材";
 "usage.amount.used" = "使用量";
@@ -189,7 +191,8 @@
 "statistics.total.spools.used" = "总使用卷数";
 "statistics.total.weight.used" = "总使用重量";
 "statistics.total.cost" = "总成本";
-"statistics.total.usage.length" = "总使用长度";
+"statistics.total.printing.days" = "打印天数";
+"statistics.days.unit" = "天";
 "statistics.material.usage.breakdown" = "材料使用分布";
 "statistics.usage.trend.over.time" = "使用趋势";
 "statistics.cost.analysis" = "成本分析";

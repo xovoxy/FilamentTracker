@@ -119,6 +119,46 @@ struct TrackUsageView: View {
                 TextField(String(localized: "usage.enter.job.name", bundle: .main), text: $printJobName)
                     .textFieldStyle(UsageTextFieldStyle())
             }
+
+            // Summary statistics for this print job
+            HStack(alignment: .center, spacing: 12) {
+                // Icon on the left
+                Image("usage.spool")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
+                    .padding(10)
+                    .cornerRadius(14)
+                
+                // Text information on the right
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text(String(localized: "usage.summary.total.weight", bundle: .main))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Text(formatWeight(totalUsedWeight))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                    }
+                    
+                    HStack {
+                        Text(String(localized: "usage.summary.estimated.cost", bundle: .main))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                        
+                        Text(formatCost(totalEstimatedCost))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                    }
+                }
+            }
         }
         .padding(20)
         .background(Color(.systemBackground))
@@ -277,6 +317,49 @@ struct TrackUsageView: View {
         }
         
         dismiss()
+    }
+
+    // MARK: - Summary Calculations
+    private var totalUsedWeight: Double {
+        usageItems.reduce(0.0) { partialResult, item in
+            guard let amount = Double(item.amountGrams), amount > 0 else { return partialResult }
+            return partialResult + amount
+        }
+    }
+    
+    private var totalEstimatedCost: Decimal {
+        var total: Decimal = 0
+        
+        for item in usageItems {
+            guard
+                let price = item.filament.price,
+                price > 0,
+                item.filament.initialWeight > 0,
+                let amount = Double(item.amountGrams),
+                amount > 0
+            else { continue }
+            
+            let usageRatio = Decimal(amount) / Decimal(item.filament.initialWeight)
+            total += price * usageRatio
+        }
+        
+        return total
+    }
+    
+    private func formatWeight(_ grams: Double) -> String {
+        if grams >= 1000 {
+            return String(format: "%.1fkg", grams / 1000.0)
+        } else {
+            return String(format: "%.0fg", grams)
+        }
+    }
+    
+    private func formatCost(_ cost: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "CNY"
+        formatter.currencySymbol = "¥"
+        return formatter.string(from: cost as NSDecimalNumber) ?? "¥0"
     }
 }
 

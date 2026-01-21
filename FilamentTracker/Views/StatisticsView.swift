@@ -255,14 +255,16 @@ struct StatisticsView: View {
                     backgroundColor: Color(hex: "#8BC5D9")
                 )
                 
-                // Total Usage Length Card
+                // Total Printing Days Card
                 StatisticsCard(
                     icon: {
-                        Image(systemName: "ruler")
-                            .font(.system(size: 36))
+                        Image("static.calendar")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 44, height: 44)
                     },
-                    title: String(localized: "statistics.total.usage.length", bundle: .main),
-                    value: formatLength(totalUsageLength),
+                    title: String(localized: "statistics.total.printing.days", bundle: .main),
+                    value: formatDays(totalPrintingDays),
                     backgroundColor: Color(hex: "#8A7BC4")
                 )
             }
@@ -388,19 +390,13 @@ struct StatisticsView: View {
         return total
     }
     
-    private var totalUsageLength: Double {
-        var totalLength: Double = 0
-        for log in filteredLogs {
-            guard let filament = log.filament else { continue }
-            let density = filament.density ?? FilamentCalculator.density(for: filament.material)
-            let length = FilamentCalculator.weightToLength(
-                weightGrams: log.amount,
-                diameter: filament.diameter,
-                density: density
-            )
-            totalLength += length
-        }
-        return totalLength
+    private var totalPrintingDays: Int {
+        // Count unique days that have printing records
+        let calendar = Calendar.current
+        let uniqueDays = Set(filteredLogs.map { log in
+            calendar.startOfDay(for: log.date)
+        })
+        return uniqueDays.count
     }
     
     // MARK: - Formatting Helpers
@@ -420,12 +416,8 @@ struct StatisticsView: View {
         return formatter.string(from: cost as NSDecimalNumber) ?? "¥0"
     }
     
-    private func formatLength(_ meters: Double) -> String {
-        if meters >= 1000 {
-            return String(format: "%.1fkm", meters / 1000.0)
-        } else {
-            return String(format: "%.0fm", meters)
-        }
+    private func formatDays(_ days: Int) -> String {
+        return "\(days)\(String(localized: "statistics.days.unit", bundle: .main))"
     }
 }
 
@@ -932,6 +924,7 @@ struct UsageByMaterialChart: View {
                     // 保证每个柱状条的高度和左侧文字一致（24）
                     plotArea.frame(height: CGFloat(usageData.count) * 24)
                 }
+                .padding(.top, 16)
             }
         }
     }

@@ -168,6 +168,8 @@
 "usage.usage.details" = "USAGE DETAILS";
 "usage.print.job.name" = "Print Job Name";
 "usage.enter.job.name" = "Enter job name.";
+"usage.summary.total.weight" = "Total Weight";
+"usage.summary.estimated.cost" = "Estimated Cost";
 "usage.add.spool" = "Add Spool";
 "usage.no.spools.added" = "No spools added";
 "usage.amount.used" = "Amount Used";
@@ -189,7 +191,8 @@
 "statistics.total.spools.used" = "Total spools used";
 "statistics.total.weight.used" = "Total weight used";
 "statistics.total.cost" = "Total cost";
-"statistics.total.usage.length" = "Total usage length";
+"statistics.total.printing.days" = "Printing Days";
+"statistics.days.unit" = " days";
 "statistics.material.usage.breakdown" = "Material Usage Breakdown";
 "statistics.usage.trend.over.time" = "Usage Trend Over Time";
 "statistics.cost.analysis" = "Cost Analysis";
