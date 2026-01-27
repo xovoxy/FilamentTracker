@@ -269,14 +269,6 @@ struct DataMigrationView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     // Overview
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(String(localized: "migration.title", bundle: .main))
-                            .font(.title)
-                            .fontWeight(.bold)
-                        
-                        Text(String(localized: "migration.subtitle", bundle: .main))
-                            .font(.headline)
-                            .foregroundColor(.secondary)
-                        
                         Text(String(localized: "migration.description", bundle: .main))
                             .font(.body)
                             .foregroundColor(.secondary)
@@ -319,10 +311,6 @@ struct DataMigrationView: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    
-                    // JSON example and steps
-                    jsonExampleSection
-                    howToUseSection
                 }
                 .padding()
             }

@@ -267,13 +267,6 @@ struct HomeView: View {
                             Label(String(localized: "home.language", bundle: .main), systemImage: "globe")
                         }
                         
-                        Divider()
-                        
-                        Button {
-                            showProfile = true
-                        } label: {
-                            Label(String(localized: "home.profile", bundle: .main), systemImage: "person.circle")
-                        }
                     } label: {
                         Image(systemName: "gearshape")
                             .font(.title3)
