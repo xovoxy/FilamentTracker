@@ -17,13 +17,19 @@ struct FilamentGroup: Identifiable {
     let colorHex: String
     let material: String
     let filaments: [Filament]
+    /// 归档耗材的使用量（同颜色+材料），用于在耗材组中展示完整使用情况
+    let archivedUsage: Double
+    /// 归档耗材的使用记录，用于趋势图与历史
+    let archivedLogs: [UsageLog]
     
-    init(colorName: String, colorHex: String, material: String, filaments: [Filament]) {
+    init(colorName: String, colorHex: String, material: String, filaments: [Filament], archivedUsage: Double = 0, archivedLogs: [UsageLog] = []) {
         self.id = "\(colorName)-\(material)"
         self.colorName = colorName
         self.colorHex = colorHex
         self.material = material
         self.filaments = filaments
+        self.archivedUsage = archivedUsage
+        self.archivedLogs = archivedLogs
     }
     
     var totalCount: Int {
@@ -38,8 +44,9 @@ struct FilamentGroup: Identifiable {
         filaments.reduce(0) { $0 + $1.initialWeight }
     }
     
+    /// 当前组内耗材使用量 + 同组已归档耗材的使用量
     var totalUsed: Double {
-        totalInitial - totalRemaining
+        (totalInitial - totalRemaining) + archivedUsage
     }
     
     var averagePercentage: Double {
@@ -47,14 +54,25 @@ struct FilamentGroup: Identifiable {
         return (totalRemaining / totalInitial) * 100
     }
     
+    /// 当前组内 + 同组已归档耗材的所有使用记录
     var allLogs: [UsageLog] {
-        filaments.flatMap { $0.logs }
+        filaments.flatMap { $0.logs } + archivedLogs
+    }
+}
+
+/// 重量展示：< 1 kg 用克，≥ 1 kg 用千克
+private func formatWeightFromGrams(_ grams: Double) -> String {
+    if grams >= 1000 {
+        return String(format: "%.1f kg", grams / 1000.0)
+    } else {
+        return String(format: "%.0f g", grams)
     }
 }
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(filter: #Predicate<Filament> { !$0.isArchived }) private var filaments: [Filament]
+    @Query(filter: #Predicate<Filament> { $0.isArchived }) private var archivedFilaments: [Filament]
     @Query private var usageLogs: [UsageLog]
     @Query private var appSettings: [AppSettings]
     
@@ -118,21 +136,34 @@ struct HomeView: View {
         return (mostUsedGroup.colorName, mostUsedGroup.material, mostUsedGroup.colorHex, percentage)
     }
     
+    // 按颜色+材料分组的已归档耗材（用于合并到耗材组的使用量）
+    private var archivedByGroupKey: [String: (usage: Double, logs: [UsageLog])] {
+        let grouped = Dictionary(grouping: archivedFilaments) { "\($0.colorName)-\($0.material)" }
+        return grouped.mapValues { filaments in
+            let logs = filaments.flatMap { $0.logs }
+            let usage = logs.reduce(0.0) { $0 + $1.amount }
+            return (usage, logs)
+        }
+    }
+    
     // Group filaments by color and material
     var groupedFilaments: [FilamentGroup] {
         let grouped = Dictionary(grouping: filaments) { filament in
             "\(filament.colorName)-\(filament.material)"
         }
         
-        let allGroups = grouped.compactMap { (_, filaments) -> FilamentGroup? in
+        let allGroups = grouped.compactMap { (key, filaments) -> FilamentGroup? in
             guard let first = filaments.first else { return nil }
             // Sort filaments by remaining weight (descending)
             let sortedFilaments = filaments.sorted { $0.remainingWeight > $1.remainingWeight }
+            let archived = archivedByGroupKey[key] ?? (usage: 0, logs: [])
             return FilamentGroup(
                 colorName: first.colorName,
                 colorHex: first.colorHex,
                 material: first.material,
-                filaments: sortedFilaments
+                filaments: sortedFilaments,
+                archivedUsage: archived.usage,
+                archivedLogs: archived.logs
             )
         }
         
@@ -162,11 +193,7 @@ struct HomeView: View {
     
     // Format usage value - use kg if >= 1000g, otherwise use g
     private func formatUsage(_ grams: Double) -> String {
-        if grams >= 1000 {
-            return String(format: "%.1f kg", grams / 1000.0)
-        } else {
-            return String(format: "%.0f g", grams)
-        }
+        formatWeightFromGrams(grams)
     }
     
     var body: some View {
@@ -777,14 +804,14 @@ struct ColorMaterialStatsSheet: View {
                             
                             GroupStatsCard(
                                 title: String(localized: "home.group.stats.remaining", bundle: .main),
-                                value: String(format: "%.1f kg", group.totalRemaining / 1000.0 ),
+                                value: formatWeightFromGrams(group.totalRemaining),
                                 icon: "scalemass",
                                 color: Color(hex: "#8A7BC4")
                             )
                             
                             GroupStatsCard(
                                 title: String(localized: "home.group.stats.used", bundle: .main),
-                                value: String(format: "%.0f g", group.totalUsed),
+                                value: formatWeightFromGrams(group.totalUsed),
                                 icon: "arrow.down.circle",
                                 color: Color(hex: "#6B9563")
                             )

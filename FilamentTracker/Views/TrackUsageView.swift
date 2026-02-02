@@ -632,7 +632,6 @@ struct FilamentSelectionView: View {
                             }
                         }
                         .padding(.vertical, 12)
-                        .background(Color(.systemBackground).opacity(0.9))
                     }
                     
                     // Filament List
@@ -690,7 +689,7 @@ struct FilamentSelectionView: View {
                                         }
                                     }
                                 }
-                                .listRowBackground(Color(.systemBackground).opacity(0.9))
+                                .listRowBackground(Color(.systemBackground))
                             }
                         }
                         .listStyle(.insetGrouped)
