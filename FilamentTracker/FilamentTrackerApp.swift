@@ -33,6 +33,6 @@ struct FilamentTrackerApp: App {
             }
             .preferredColorScheme(.light)
         }
-        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self, MaterialColorConfig.self])
+        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self, MaterialColorConfig.self, CustomBrand.self, CustomMaterialType.self])
     }
 }

@@ -12,6 +12,7 @@ import UIKit
 struct AddMaterialView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query(sort: \CustomMaterialType.name) private var customMaterialTypes: [CustomMaterialType]
     
     @State private var colorName: String = ""
     @State private var brand: String = ""
@@ -35,10 +36,16 @@ struct AddMaterialView: View {
     @State private var errorMessage: String = ""
     
     let filament: Filament?
-    let materials = ["PLA", "PLA+", "ABS", "PETG", "TPU", "ASA", "PA", "PC", "PVA", "HIPS", "Wood", "Carbon", "Silk", "Matte"]
+    let presetMaterials = ["PLA", "PLA+", "ABS", "PETG", "TPU", "ASA", "PA", "PC", "PVA", "HIPS", "Wood", "Carbon", "Silk", "Matte"]
     
     // Preset brands
     let presetBrands = ["Bambu Lab", "Polymaker", "Sunlu", "eSUN", "Creality", "Prusa", "Hatchbox", "Overture"]
+    
+    /// 预设 + 用户自定义材料类型，去重且预设在前
+    private var availableMaterials: [String] {
+        let customNames = customMaterialTypes.map(\.name)
+        return presetMaterials + customNames.filter { !presetMaterials.contains($0) }
+    }
     
     // Design colors matching the mockup - common filament colors
     let presetColors: [String] = [
@@ -79,6 +86,20 @@ struct AddMaterialView: View {
     // Form validation
     private var isFormValid: Bool {
         !stockAmount.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    
+    /// 保存自定义材料类型并关闭输入框
+    private func saveCustomMaterialAndClose() {
+        let name = customMaterial.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let exists = customMaterialTypes.contains { $0.name == name } || presetMaterials.contains(name)
+        if !exists {
+            modelContext.insert(CustomMaterialType(name: name))
+            try? modelContext.save()
+        }
+        material = name
+        showCustomMaterialInput = false
+        customMaterial = ""
     }
     
     var body: some View {
@@ -157,7 +178,7 @@ struct AddMaterialView: View {
                                 VStack(alignment: .leading, spacing: 12) {
                                     ScrollView(.horizontal, showsIndicators: false) {
                                         HStack(spacing: 8) {
-                                            ForEach(materials, id: \.self) { mat in
+                                            ForEach(availableMaterials, id: \.self) { mat in
                                                 MaterialTypeChip(
                                                     title: mat,
                                                     isSelected: material == mat,
@@ -173,8 +194,8 @@ struct AddMaterialView: View {
                                             
                                             // Custom/Other option - show as selected if material is custom
                                             MaterialTypeChip(
-                                                title: !materials.contains(material) && !material.isEmpty ? material : "+",
-                                                isSelected: !materials.contains(material) && !material.isEmpty,
+                                                title: !availableMaterials.contains(material) && !material.isEmpty ? material : "+",
+                                                isSelected: !availableMaterials.contains(material) && !material.isEmpty,
                                                 disabled: filament != nil
                                             ) {
                                                 if filament == nil {
@@ -194,12 +215,7 @@ struct AddMaterialView: View {
                                                 .background(Color(.secondarySystemBackground))
                                                 .cornerRadius(12)
                                             
-                                            Button(action: {
-                                                if !customMaterial.isEmpty {
-                                                    material = customMaterial
-                                                    showCustomMaterialInput = false
-                                                }
-                                            }) {
+                                            Button(action: saveCustomMaterialAndClose) {
                                                 Text(String(localized: "material.ok", bundle: .main))
                                                     .font(.subheadline)
                                                     .fontWeight(.medium)
@@ -827,11 +843,32 @@ struct ColorButton: View {
 
 // MARK: - Brand Selection View
 struct BrandSelectionView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \CustomBrand.name) private var customBrands: [CustomBrand]
+    
     @Binding var selectedBrand: String
     let presetBrands: [String]
-    @Environment(\.dismiss) private var dismiss
     @State private var customBrand: String = ""
     @State private var isCustomMode: Bool = false
+    
+    /// 预设品牌 + 用户自定义品牌，去重且预设在前
+    private var allBrands: [String] {
+        presetBrands + customBrands.map(\.name).filter { !presetBrands.contains($0) }
+    }
+    
+    /// 保存自定义品牌并关闭
+    private func saveCustomBrandAndDismiss() {
+        let name = customBrand.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let exists = customBrands.contains { $0.name == name } || presetBrands.contains(name)
+        if !exists {
+            modelContext.insert(CustomBrand(name: name))
+            try? modelContext.save()
+        }
+        selectedBrand = name
+        dismiss()
+    }
     
     var body: some View {
         NavigationStack {
@@ -849,8 +886,8 @@ struct BrandSelectionView: View {
                 
                 ScrollView {
                     VStack(spacing: 12) {
-                        // Preset Brands
-                        ForEach(presetBrands, id: \.self) { brand in
+                        // Preset + Custom Brands
+                        ForEach(allBrands, id: \.self) { brand in
                             Button(action: {
                                 selectedBrand = brand
                                 dismiss()
@@ -926,12 +963,7 @@ struct BrandSelectionView: View {
                                         .background(Color(.secondarySystemBackground))
                                         .cornerRadius(12)
                                     
-                                    Button(action: {
-                                        if !customBrand.isEmpty {
-                                            selectedBrand = customBrand
-                                            dismiss()
-                                        }
-                                    }) {
+                                    Button(action: saveCustomBrandAndDismiss) {
                                         Text(String(localized: "add", bundle: .main))
                                             .font(.headline)
                                             .foregroundColor(.white)
@@ -989,5 +1021,5 @@ extension Color {
 
 #Preview {
     AddMaterialView()
-        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self, MaterialColorConfig.self], inMemory: true)
+        .modelContainer(for: [Filament.self, UsageLog.self, AppSettings.self, MaterialColorConfig.self, CustomBrand.self, CustomMaterialType.self], inMemory: true)
 }
