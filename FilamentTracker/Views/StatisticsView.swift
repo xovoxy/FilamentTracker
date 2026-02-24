@@ -23,12 +23,16 @@ enum ChartType: Identifiable {
     case usageTrend
     case costAnalysis
     case usageByMaterial
+    case usageByBrand
+    case costByBrand
     
     var id: String {
         switch self {
         case .usageTrend: return "usageTrend"
         case .costAnalysis: return "costAnalysis"
         case .usageByMaterial: return "usageByMaterial"
+        case .usageByBrand: return "usageByBrand"
+        case .costByBrand: return "costByBrand"
         }
     }
 }
@@ -350,6 +354,44 @@ struct StatisticsView: View {
             .cornerRadius(16)
             .onTapGesture {
                 showChartFullscreen(.usageByMaterial)
+            }
+            
+            // Usage by Brand (Horizontal Bar Chart)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: "statistics.usage.by.brand", bundle: .main))
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal)
+                    .padding(.top)
+                
+                UsageByBrandChart(filaments: allFilaments, logs: filteredLogs)
+                    .frame(minHeight: 200)
+                    .padding(.horizontal)
+                    .padding(.bottom)
+            }
+            .background(Color(.systemBackground).opacity(0.9))
+            .cornerRadius(16)
+            .onTapGesture {
+                showChartFullscreen(.usageByBrand)
+            }
+            
+            // Brand Cost Analysis (Bar Chart)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(String(localized: "statistics.brand.cost.analysis", bundle: .main))
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal)
+                    .padding(.top)
+                
+                BrandCostChart(filaments: allFilaments, logs: filteredLogs)
+                    .frame(height: 200)
+                    .padding(.horizontal)
+                    .padding(.bottom)
+            }
+            .background(Color(.systemBackground).opacity(0.9))
+            .cornerRadius(16)
+            .onTapGesture {
+                showChartFullscreen(.costByBrand)
             }
         }
     }
@@ -1050,6 +1092,10 @@ struct ChartDetailView: View {
             return String(localized: "statistics.cost.analysis", bundle: .main)
         case .usageByMaterial:
             return String(localized: "statistics.usage.by.material", bundle: .main)
+        case .usageByBrand:
+            return String(localized: "statistics.usage.by.brand", bundle: .main)
+        case .costByBrand:
+            return String(localized: "statistics.brand.cost.analysis", bundle: .main)
         }
     }
     
@@ -1072,7 +1118,194 @@ struct ChartDetailView: View {
         case .usageByMaterial:
             UsageByMaterialChart(filaments: filaments, logs: logs)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+        case .usageByBrand:
+            UsageByBrandChart(filaments: filaments, logs: logs)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+        case .costByBrand:
+            BrandCostChart(filaments: filaments, logs: logs)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+}
+
+// MARK: - Usage by Brand Chart (Horizontal Bar Chart)
+struct UsageByBrandChart: View {
+    let filaments: [Filament]
+    let logs: [UsageLog]
+    
+    var body: some View {
+        if usageData.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "chart.bar.horizontal")
+                    .font(.system(size: 48))
+                    .foregroundColor(.secondary.opacity(0.5))
+                Text(String(localized: "statistics.no.data", bundle: .main))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
+        } else {
+            HStack(spacing: 0) {
+                // Brand labels on the left
+                VStack(alignment: .trailing, spacing: 0) {
+                    ForEach(usageData, id: \.brand) { data in
+                        Text(data.brand)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.primary)
+                            .frame(height: 24, alignment: .center)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+                .frame(width: 80)
+                .padding(.trailing, 8)
+                
+                // Chart on the right
+                Chart(usageData, id: \.brand) { data in
+                    BarMark(
+                        x: .value("Usage", data.usage),
+                        y: .value("Brand", data.brand)
+                    )
+                    .foregroundStyle(colorForBrand(data.brand))
+                    .cornerRadius(4)
+                    .annotation(position: .trailing) {
+                        Text(formatWeight(data.usage))
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.leading, 4)
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks(position: .bottom) { value in
+                        AxisGridLine()
+                        AxisValueLabel {
+                            if let usage = value.as(Double.self) {
+                                if usage >= 1000 {
+                                    Text(String(format: "%.1fkg", usage / 1000.0))
+                                } else {
+                                    Text("\(Int(usage))g")
+                                }
+                            }
+                        }
+                    }
+                }
+                .chartYAxis(.hidden)
+                .chartPlotStyle { plotArea in
+                    plotArea.frame(height: CGFloat(usageData.count) * 24)
+                }
+                .padding(.top, 16)
+            }
+        }
+    }
+    
+    private var usageData: [(brand: String, usage: Double)] {
+        var brandUsage: [String: Double] = [:]
+        for log in logs {
+            guard let filament = log.filament else { continue }
+            let brand = filament.brand.trimmingCharacters(in: .whitespaces).isEmpty
+                ? String(localized: "statistics.unknown.brand", bundle: .main)
+                : filament.brand
+            brandUsage[brand, default: 0] += log.amount
+        }
+        return brandUsage.map { (brand: $0.key, usage: $0.value) }
+            .sorted { $0.usage > $1.usage }
+    }
+    
+    private func colorForBrand(_ brand: String) -> Color {
+        let palette = MaterialColorConfig.defaultPalette
+        guard !palette.isEmpty else { return Color.gray }
+        let hashValue = abs(brand.lowercased().hashValue)
+        return Color(hex: palette[hashValue % palette.count])
+    }
+    
+    private func formatWeight(_ grams: Double) -> String {
+        if grams >= 1000 {
+            return String(format: "%.1fkg", grams / 1000.0)
+        } else {
+            return String(format: "%.0fg", grams)
+        }
+    }
+}
+
+// MARK: - Brand Cost Chart (Bar Chart)
+struct BrandCostChart: View {
+    let filaments: [Filament]
+    let logs: [UsageLog]
+    
+    var body: some View {
+        if costData.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "chart.bar")
+                    .font(.system(size: 48))
+                    .foregroundColor(.secondary.opacity(0.5))
+                Text(String(localized: "statistics.no.data", bundle: .main))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 200)
+        } else {
+            Chart {
+                ForEach(costData, id: \.brand) { data in
+                    BarMark(
+                        x: .value("Brand", data.brand),
+                        y: .value("Cost", data.cost)
+                    )
+                    .foregroundStyle(colorForBrand(data.brand))
+                    .cornerRadius(4)
+                    .annotation(position: .top) {
+                        Text(formatCost(data.cost))
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
+                }
+            }
+            .chartYAxis {
+                AxisMarks { value in
+                    AxisGridLine()
+                    AxisValueLabel {
+                        if let cost = value.as(Decimal.self) {
+                            Text(formatCost(cost))
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var costData: [(brand: String, cost: Decimal)] {
+        var brandCosts: [String: Decimal] = [:]
+        for log in logs {
+            guard let filament = log.filament,
+                  let price = filament.price, price > 0 else { continue }
+            let usageRatio = Decimal(log.amount) / Decimal(filament.initialWeight)
+            let cost = price * usageRatio
+            let brand = filament.brand.trimmingCharacters(in: .whitespaces).isEmpty
+                ? String(localized: "statistics.unknown.brand", bundle: .main)
+                : filament.brand
+            brandCosts[brand, default: 0] += cost
+        }
+        return brandCosts.map { (brand: $0.key, cost: $0.value) }
+            .sorted { $0.cost > $1.cost }
+    }
+    
+    private func colorForBrand(_ brand: String) -> Color {
+        let palette = MaterialColorConfig.defaultPalette
+        guard !palette.isEmpty else { return Color.gray }
+        let hashValue = abs(brand.lowercased().hashValue)
+        return Color(hex: palette[hashValue % palette.count])
+    }
+    
+    private func formatCost(_ cost: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "CNY"
+        formatter.currencySymbol = "¥"
+        return formatter.string(from: cost as NSDecimalNumber) ?? "¥0"
     }
 }
 

@@ -199,6 +199,9 @@
 "statistics.usage.by.material" = "Usage by Material Type";
 "statistics.filter.date.range" = "Filter / Date Range";
 "statistics.no.data" = "No data available";
+"statistics.usage.by.brand" = "Usage by Brand";
+"statistics.brand.cost.analysis" = "Brand Cost Analysis";
+"statistics.unknown.brand" = "Unknown Brand";
 
 /* Data Migration */
 "migration.title" = "Data Migration";

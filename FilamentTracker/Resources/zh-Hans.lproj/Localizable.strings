@@ -199,6 +199,9 @@
 "statistics.usage.by.material" = "按材料类型使用量";
 "statistics.filter.date.range" = "筛选 / 日期范围";
 "statistics.no.data" = "暂无数据";
+"statistics.usage.by.brand" = "按品牌用量统计";
+"statistics.brand.cost.analysis" = "品牌成本分析";
+"statistics.unknown.brand" = "未知品牌";
 
 /* Data Migration */
 "migration.title" = "数据迁移";
